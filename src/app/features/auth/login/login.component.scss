@@ -1,0 +1,48 @@
+.login-wrapper {
+  min-height: 100vh;
+  background-color: #f5f7f8;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.08);
+}
+
+.login-logo {
+  height: 48px;
+}
+
+.login-input-group .input-group-text {
+  background-color: #f8f9fa;
+  border-right: 0;
+}
+
+.login-input-group .form-control {
+  border-left: 0;
+}
+
+.password-toggle {
+  cursor: pointer;
+  background-color: #f8f9fa;
+}
+
+.login-footer {
+  font-size: 0.75rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.login-footer a {
+  color: #6c757d;
+  text-decoration: none;
+}
+
+.login-footer a:hover {
+  color: #003366;
+}

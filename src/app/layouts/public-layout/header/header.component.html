@@ -1,0 +1,48 @@
+<header>
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
+    <div class="container">
+      <!-- Logo + Nombre (Izquierda) -->
+      <a class="navbar-brand d-flex align-items-center fw-bold" href="#">
+        <img src="assets/JDQCoreSuiteIcon.png"
+          alt="JDQ CoreSuite Logo"
+          width="40"
+          height="40"
+          class="me-2">
+        JDQ CoreSuite
+      </a>
+      <!-- Botón hamburguesa (Responsive) -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Contenido del Navbar -->
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <!-- Menú centrado -->
+        <ul class="navbar-nav mx-auto mb-2 mb-lg-0 text-center">
+          <!--
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#servicios">Servicios</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#mision">Nosotros</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#">Precios</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link fw-semibold" href="#">Contacto</a>
+          </li>
+          -->
+        </ul>
+        <!-- Botones derecha -->
+        <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
+          <button class="btn btn-outline-primary fw-semibold" routerLink="/login">
+            Iniciar Sesión
+          </button>
+          <button class="btn btn-primary" routerLink="/register-company">
+            Registrar Empresa
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,16 @@
+/* ===== VARIABLES PERSONALIZADAS ===== */
+$primary: #003366;
+$border-radius: 1rem;
+
+/* ===== IMPORTAR BOOTSTRAP ===== */
+@import "bootstrap/scss/bootstrap";
+
+/* ===== ESTILOS GLOBALES EXTRA ===== */
+body {
+  background-color: #f5f7fa;
+  padding-top: 70px; /* altura real del navbar */
+}
+
+a[routerLink] {
+  cursor: pointer;
+}

@@ -1,0 +1,54 @@
+<div class="login-wrapper d-flex align-items-center justify-content-center">
+  <div class="login-card">
+    <!-- Título -->
+    <div class="mb-4 text-center">
+      <h2 class="fw-bold">Bienvenido nuevamente</h2>
+      <p class="text-muted small">
+        Ingresa tus credenciales para acceder a tu cuenta.
+      </p>
+    </div>
+    <!-- Formulario -->
+    <form>
+      <!-- Correo -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Correo electrónico corporativo</label>
+        <div class="input-group login-input-group">
+          <span class="input-group-text">
+            <i class="bi bi-envelope"></i>
+          </span>
+          <input type="email" class="form-control" placeholder="nombre@empresa.com">
+        </div>
+      </div>
+      <!-- Contraseña -->
+      <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+          <label class="form-label fw-semibold mb-0">Contraseña</label>
+          <a href="" class="small text-primary fw-semibold" routerLink="/forgot-password">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+        <div class="input-group login-input-group mt-2">
+          <span class="input-group-text">
+            <i class="bi bi-lock"></i>
+          </span>
+          <input type="password" class="form-control" placeholder="••••••••">
+          <span class="input-group-text password-toggle">
+            <i class="bi bi-eye"></i>
+          </span>
+        </div>
+      </div>
+      <!-- Botón -->
+      <div class="d-grid mb-4">
+        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+          Iniciar sesión
+        </button>
+      </div>
+    </form>
+    <!-- Footer -->
+    <div class="login-footer text-center mt-4">
+      <a href="#">Política de Privacidad</a>
+      <a href="#">Términos del Servicio</a>
+      <a href="#">Seguridad</a>
+    </div>
+  </div>
+</div>

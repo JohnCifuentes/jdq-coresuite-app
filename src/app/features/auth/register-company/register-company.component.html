@@ -1,0 +1,128 @@
+<!-- MAIN -->
+<div class="flex-grow-1 py-5">
+    <div class="container">
+        <div class="row g-4">
+            <!-- LEFT SIDE (FORM) -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 rounded-4 p-4 p-md-5">
+                    <div class="mb-4 text-center">
+                        <h2 class="fw-bold text-primary">
+                            Información de la Empresa
+                        </h2>
+                        <p class="text-muted">
+                            Complete el perfil corporativo para habilitar los servicios de la plataforma.
+                        </p>
+                    </div>
+                    <form class="row g-4">
+                        <!-- Razón Social -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Razón Social</label>
+                            <input type="text" class="form-control form-control-lg" placeholder="Nombre legal completo">
+                        </div>
+                        <!-- Tipo ID + Número -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Tipo de Identificación</label>
+                            <select class="form-select form-select-lg">
+                                <option>NIT</option>
+                                <option>RUT</option>
+                                <option>Cédula de Extranjería</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Número de Identificación</label>
+                            <input type="text" class="form-control form-control-lg" placeholder="Ej: 900.000.000-1">
+                        </div>
+                        <!-- Ubicación -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">País</label>
+                            <select class="form-select form-select-lg">
+                                <option>Seleccionar país</option>
+                                <option>Colombia</option>
+                                <option>México</option>
+                                <option>Chile</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Departamento</label>
+                            <input type="text" class="form-control form-control-lg" placeholder="Estado/Región">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Municipio</label>
+                            <input type="text" class="form-control form-control-lg" placeholder="Ciudad">
+                        </div>
+                        <!-- Dirección -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Dirección</label>
+                            <input type="text" class="form-control form-control-lg"
+                                placeholder="Dirección de la oficina principal">
+                        </div>
+                        <!-- Contacto -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Correo Electrónico Corporativo</label>
+                            <input type="email" class="form-control form-control-lg" placeholder="admin@empresa.com">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Teléfono</label>
+                            <input type="tel" class="form-control form-control-lg" placeholder="+00 000 0000">
+                        </div>
+                        <!-- Botón -->
+                        <div class="col-12 pt-3">
+                            <button type="submit"
+                                class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2">
+                                <span>Finalizar Registro</span>
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- RIGHT SIDE (SIDEBAR) -->
+            <div class="col-lg-4">
+                <div class="p-4 rounded-4 border bg-light position-sticky" style="top:100px;">
+                    <h3 class="fw-bold text-primary mb-4">¿Por qué JDQ CoreSuite?</h3>
+                    <!-- Benefit 1 -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="icon-wrapper">
+                            <i class="bi bi-shield-shaded text-primary fs-1"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Aislamiento de datos</h6>
+                            <p class="small text-muted mb-0">
+                                Seguridad multi-tenant garantizada. Sus datos permanecen privados y protegidos
+                                en entornos dedicados.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Benefit 2 -->
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="icon-wrapper">
+                            <i class="bi bi-diagram-3 text-primary fs-1"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Configuración dinámica</h6>
+                            <p class="small text-muted mb-0">
+                                Adapte la plataforma a sus procesos. Flujos de trabajo personalizados que
+                                evolucionan
+                                con su negocio.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Benefit 3 -->
+                    <div class="d-flex gap-3">
+                        <div class="icon-wrapper">
+                            <i class="bi bi-person-gear" text-primary fs-1></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Soporte empresarial</h6>
+                            <p class="small text-muted mb-0">
+                                Asistencia técnica 24/7 de nivel corporativo para garantizar la continuidad de
+                                sus
+                                operaciones.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

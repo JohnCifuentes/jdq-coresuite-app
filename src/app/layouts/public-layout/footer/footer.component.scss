@@ -1,0 +1,14 @@
+.footer-section {
+  background: linear-gradient(135deg, #003366, #001f3f);
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  transition: 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}

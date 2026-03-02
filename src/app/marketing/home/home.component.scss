@@ -1,0 +1,40 @@
+.shadow-primary {
+  box-shadow: 0 10px 25px rgba(0, 51, 102, 0.25);
+}
+
+.mock-container {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  font-size: 0.85rem;
+  border-radius: 50px;
+}
+
+.icon-box {
+  font-size: 1.8rem;
+  background: #eef2f7;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mission-box {
+  background: linear-gradient(135deg, #003366, #1e4d7a);
+}
+
+.carousel-indicators [data-bs-target] {
+  background-color: #003366;
+}
+
+.carousel-indicators .active {
+  background-color: #001f3f;
+}
