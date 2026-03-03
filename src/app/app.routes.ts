@@ -10,6 +10,9 @@ import { RegisterCompanyComponent } from './features/auth/register-company/regis
 import { LoginComponent } from './features/auth/login/login.component';
 import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
+import { SuperAdminHomeComponent } from './features/dashboard/pages/super-admin-home/super-admin-home.component';
+import { AdminEmpresaHomeComponent } from './features/dashboard/pages/admin-empresa-home/admin-empresa-home.component';
+import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
   {
@@ -30,8 +33,15 @@ export const routes: Routes = [
   {
     path: 'app',
     component: PrivateLayoutComponent,
-    loadChildren: () =>
-      import('./features/dashboard/dashboard.module')
-        .then(m => m.DashboardModule)
+    children: [
+      {
+        path: '',
+        canActivate: [roleGuard],
+        component: AdminEmpresaHomeComponent,
+        pathMatch: 'full'
+      },
+      { path: 'super-admin-home', component: SuperAdminHomeComponent },
+      { path: 'admin-empresa-home', component: AdminEmpresaHomeComponent }
+    ]
   }
 ];

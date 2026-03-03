@@ -8,8 +8,9 @@ $border-radius: 1rem;
 /* ===== ESTILOS GLOBALES EXTRA ===== */
 body {
   background-color: #f5f7fa;
-  padding-top: 70px; /* altura real del navbar */
 }
+
+/**padding-top: 70px; /* altura real del navbar */
 
 a[routerLink] {
   cursor: pointer;

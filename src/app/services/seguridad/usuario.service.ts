@@ -9,11 +9,7 @@ import {
   UsuarioCredencialesDTO,
   ResponseUsuarioDTO
 } from '../../models/seguridad/usuario.models';
-
-interface RespuestaDTO<T> {
-  error: boolean;
-  datos: T;
-}
+import { RespuestaDTO } from '../../models/response.dto';
 
 @Injectable({
   providedIn: 'root'

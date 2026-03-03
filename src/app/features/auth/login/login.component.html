@@ -8,7 +8,7 @@
       </p>
     </div>
     <!-- Formulario -->
-    <form>
+    <form (ngSubmit)="login()" [formGroup]="form">
       <!-- Correo -->
       <div class="mb-4">
         <label class="form-label fw-semibold">Correo electrónico corporativo</label>
@@ -16,7 +16,11 @@
           <span class="input-group-text">
             <i class="bi bi-envelope"></i>
           </span>
-          <input type="email" class="form-control" placeholder="nombre@empresa.com">
+          <input type="email" class="form-control" placeholder="nombre@empresa.com" formControlName="correoElectronico">
+        </div>
+        <div *ngIf="form.get('correoElectronico')?.invalid && form.get('correoElectronico')?.touched" class="text-warning small mt-1">
+          <span *ngIf="form.get('correoElectronico')?.errors?.['required']">El correo es obligatorio.</span>
+          <span *ngIf="form.get('correoElectronico')?.errors?.['email']">Formato de correo inválido.</span>
         </div>
       </div>
       <!-- Contraseña -->
@@ -31,15 +35,22 @@
           <span class="input-group-text">
             <i class="bi bi-lock"></i>
           </span>
-          <input type="password" class="form-control" placeholder="••••••••">
+          <input type="password" class="form-control" placeholder="••••••••" formControlName="password">
           <span class="input-group-text password-toggle">
             <i class="bi bi-eye"></i>
           </span>
         </div>
+        <div *ngIf="form.get('password')?.invalid && form.get('password')?.touched" class="text-warning small mt-1">
+          <span *ngIf="form.get('password')?.errors?.['required']">La contraseña es obligatoria.</span>
+        </div>
+      </div>
+      <!-- error message -->
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
       </div>
       <!-- Botón -->
       <div class="d-grid mb-4">
-        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+        <button type="submit" class="btn btn-primary btn-lg fw-bold" [disabled]="form.invalid">
           Iniciar sesión
         </button>
       </div>

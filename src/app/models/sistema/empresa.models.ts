@@ -64,7 +64,3 @@ export interface ResponseEmpresaDTO {
   fechaActualizacion: string;
 }
 
-export interface RespuestaDTO<T> {
-  error: boolean;
-  datos: T;
-}

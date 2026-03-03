@@ -3,11 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MunicipioDTO } from '../../models/catalogo/municipio.models';
-
-interface RespuestaDTO<T> {
-  error: boolean;
-  datos: T;
-}
+import { RespuestaDTO } from '../../models/response.dto';
 
 @Injectable({
   providedIn: 'root'

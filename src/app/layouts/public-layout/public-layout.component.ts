@@ -13,5 +13,6 @@ import { HeaderComponent } from "../public-layout/header/header.component";
   templateUrl: './public-layout.component.html',
   styleUrl: './public-layout.component.scss'
 })
+
 export class PublicLayoutComponent {
 }

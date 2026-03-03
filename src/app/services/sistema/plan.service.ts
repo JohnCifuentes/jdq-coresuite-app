@@ -1,18 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 import {
   CreatePlanDTO,
   UpdatePlanDTO,
   InactivePlanDTO,
   ResponsePlanDTO
 } from '../../models/sistema/plan.models';
-
-interface RespuestaDTO<T> {
-  error: boolean;
-  datos: T;
-}
+import { RespuestaDTO } from '../../models/response.dto';
 
 @Injectable({
   providedIn: 'root'

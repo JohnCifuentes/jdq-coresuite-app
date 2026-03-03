@@ -13,61 +13,71 @@
                             Complete el perfil corporativo para habilitar los servicios de la plataforma.
                         </p>
                     </div>
-                    <form class="row g-4">
+                    <form class="row g-4" [formGroup]="companyForm" (ngSubmit)="onSubmit()">
                         <!-- Razón Social -->
                         <div class="col-12">
                             <label class="form-label fw-semibold">Razón Social</label>
-                            <input type="text" class="form-control form-control-lg" placeholder="Nombre legal completo">
+                            <input type="text" class="form-control form-control-lg" placeholder="Nombre legal completo" formControlName="razonSocial">
                         </div>
                         <!-- Tipo ID + Número -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Tipo de Identificación</label>
-                            <select class="form-select form-select-lg">
-                                <option>NIT</option>
-                                <option>RUT</option>
-                                <option>Cédula de Extranjería</option>
+                            <select class="form-select form-select-lg" formControlName="tipoIdentificacion">
+                                <option value="">Seleccionar tipo</option>
+                                <option *ngFor="let tipo of tiposId" [value]="tipo.id">{{ tipo.nombre }}</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Número de Identificación</label>
-                            <input type="text" class="form-control form-control-lg" placeholder="Ej: 900.000.000-1">
+                            <input type="text" class="form-control form-control-lg" placeholder="Ej: 900.000.000-1" formControlName="numeroIdentificacion">
                         </div>
                         <!-- Ubicación -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">País</label>
-                            <select class="form-select form-select-lg">
-                                <option>Seleccionar país</option>
-                                <option>Colombia</option>
-                                <option>México</option>
-                                <option>Chile</option>
+                            <select #paisSelect class="form-select form-select-lg" formControlName="pais" (change)="onPaisChange(paisSelect.value)">
+                                <option value="">Seleccionar país</option>
+                                <option *ngFor="let pais of paises" [value]="pais.id">{{ pais.nombre }}</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Departamento</label>
-                            <input type="text" class="form-control form-control-lg" placeholder="Estado/Región">
+                            <select #deptSelect class="form-select form-select-lg" formControlName="departamento" (change)="onDepartamentoChange(deptSelect.value)">
+                                <option value="">Seleccionar departamento</option>
+                                <option *ngFor="let dept of departamentos" [value]="dept.id">{{ dept.nombre }}</option>
+                            </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Municipio</label>
-                            <input type="text" class="form-control form-control-lg" placeholder="Ciudad">
+                            <select class="form-select form-select-lg" formControlName="municipio">
+                                <option value="">Seleccionar municipio</option>
+                                <option *ngFor="let mun of municipios" [value]="mun.id">{{ mun.nombre }}</option>
+                            </select>
                         </div>
                         <!-- Dirección -->
                         <div class="col-12">
                             <label class="form-label fw-semibold">Dirección</label>
-                            <input type="text" class="form-control form-control-lg"
-                                placeholder="Dirección de la oficina principal">
+                            <input type="text" class="form-control form-control-lg" placeholder="Dirección de la oficina principal" formControlName="direccion">
                         </div>
                         <!-- Contacto -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Correo Electrónico Corporativo</label>
-                            <input type="email" class="form-control form-control-lg" placeholder="admin@empresa.com">
+                            <input type="email" class="form-control form-control-lg" placeholder="admin@empresa.com" formControlName="correo">
+                            <div *ngIf="companyForm.get('correo')?.invalid && companyForm.get('correo')?.touched" class="text-warning small mt-1">
+                                <span *ngIf="companyForm.get('correo')?.errors?.['required']">El correo es obligatorio.</span>
+                                <span *ngIf="companyForm.get('correo')?.errors?.['email']">Formato de correo inválido.</span>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Teléfono</label>
-                            <input type="tel" class="form-control form-control-lg" placeholder="+00 000 0000">
+                            <input type="tel" class="form-control form-control-lg" placeholder="+00 000 0000" formControlName="telefono">
+                            <div *ngIf="companyForm.get('telefono')?.invalid && companyForm.get('telefono')?.touched" class="text-warning small mt-1">
+                                <span *ngIf="companyForm.get('telefono')?.errors?.['required']">El teléfono es obligatorio.</span>
+                                <span *ngIf="companyForm.get('telefono')?.errors?.['pattern']">Formato de teléfono inválido; debe comenzar con +57 y contener 7‑10 dígitos.</span>
+                            </div>
                         </div>
                         <!-- Botón -->
                         <div class="col-12 pt-3">
-                            <button type="submit"
+                            <button type="submit" [disabled]="!companyForm.valid"
                                 class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2">
                                 <span>Finalizar Registro</span>
                                 <span class="material-symbols-outlined">arrow_forward</span>

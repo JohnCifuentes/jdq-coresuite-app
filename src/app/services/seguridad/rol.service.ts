@@ -8,11 +8,7 @@ import {
   InactiveRolDTO,
   ResponseRolDTO
 } from '../../models/seguridad/rol.models';
-
-interface RespuestaDTO<T> {
-  error: boolean;
-  datos: T;
-}
+import { RespuestaDTO } from '../../models/response.dto';
 
 @Injectable({
   providedIn: 'root'

@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
 import {
   CreateEmpresaDTO,
   UpdateEmpresaDTO,
   InactiveEmpresaDTO,
-  ResponseEmpresaDTO,
-  RespuestaDTO
+  ResponseEmpresaDTO
 } from '../../models/sistema/empresa.models';
+
+import { RespuestaDTO } from '../../models/response.dto';
 
 @Injectable({
   providedIn: 'root'
