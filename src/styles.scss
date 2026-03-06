@@ -3,7 +3,7 @@ $primary: #003366;
 $border-radius: 1rem;
 
 /* ===== IMPORTAR BOOTSTRAP ===== */
-@import "bootstrap/scss/bootstrap";
+@use "bootstrap/scss/bootstrap";
 
 /* ===== ESTILOS GLOBALES EXTRA ===== */
 body {

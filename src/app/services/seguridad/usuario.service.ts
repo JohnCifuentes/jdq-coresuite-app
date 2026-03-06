@@ -52,7 +52,10 @@ export class UsuarioService {
   }
 
   recuperarPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
-    return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(`${this.apiUrl}/recuperar/password`, usuarioCredencialesDTO);
+    return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(
+      `${this.apiUrl}/recuperar/password?correoElectronico=${encodeURIComponent(usuarioCredencialesDTO.correoElectronico)}&password=${encodeURIComponent(usuarioCredencialesDTO.password)}`,
+      {}
+    );
   }
 
   actualizarPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
