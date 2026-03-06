@@ -13,6 +13,11 @@ import { ResetPasswordComponent } from './features/auth/reset-password/reset-pas
 import { SuperAdminHomeComponent } from './features/dashboard/pages/super-admin-home/super-admin-home.component';
 import { AdminEmpresaHomeComponent } from './features/dashboard/pages/admin-empresa-home/admin-empresa-home.component';
 import { roleGuard } from './guards/role.guard';
+import { RolComponent } from './features/rol/rol.component';
+import { UserComponent } from './features/user/user.component';
+import { RolUserComponent } from './features/rol-user/rol-user.component';
+import { ModuleComponent } from './features/module/module.component';
+import { InterfacesComponent } from './features/interfaces/interfaces.component';
 
 export const routes: Routes = [
   {
@@ -41,7 +46,12 @@ export const routes: Routes = [
         pathMatch: 'full'
       },
       { path: 'super-admin-home', component: SuperAdminHomeComponent },
-      { path: 'admin-empresa-home', component: AdminEmpresaHomeComponent }
+      { path: 'admin-empresa-home', component: AdminEmpresaHomeComponent },
+      { path: 'rol', component: RolComponent },
+      { path: 'user', component: UserComponent },
+      { path: 'rol-user', component: RolUserComponent },
+      { path: 'module', component: ModuleComponent },
+      { path: 'interface', component: InterfacesComponent }
     ]
   }
 ];

@@ -1,0 +1,58 @@
+.usuario-container {
+  background-color: #f5f7f8;
+}
+
+/* Section Titles */
+.section-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Audit */
+.audit-box {
+  background-color: #eef2f6;
+}
+
+.audit-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.audit-value {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Avatar */
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Search */
+.search-box {
+  width: 250px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #adb5bd;
+}
+
+/* Icon buttons */
+.btn-icon {
+  padding: 4px 6px;
+}

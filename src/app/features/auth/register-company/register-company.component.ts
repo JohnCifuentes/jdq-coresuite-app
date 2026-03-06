@@ -139,16 +139,28 @@ export class RegisterCompanyComponent implements OnInit {
       telefono: v.telefono
     };
 
-    this.empresaService.createEmpresa(dto).subscribe((res) => {
-      console.log('empresa creada', res);
-      if (!res.error) {
+    this.empresaService.createEmpresa(dto).subscribe({
+      next: (res) => {
+        console.log('empresa creada', res);
+        if (!res.error) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Empresa creada',
+            text: 'La empresa se ha registrado correctamente.',
+            confirmButtonText: 'Aceptar'
+          }).then(() => {
+            window.location.reload();
+          });
+        } 
+      },
+      error: (err) => {
+        console.error('error creando empresa', err);
+        // backend indicated error --> show message
         Swal.fire({
-          icon: 'success',
-          title: 'Empresa creada',
-          text: 'La empresa se ha registrado correctamente.',
+          icon: 'error',
+          title: 'No se pudo crear la empresa',
+          text: err.error.contenido,
           confirmButtonText: 'Aceptar'
-        }).then(() => {
-          window.location.reload();
         });
       }
     });

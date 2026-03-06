@@ -1,0 +1,223 @@
+<div class="container-fluid roles-container py-4">
+
+  <!-- =======================
+        CREAR / ACTUALIZAR ROL
+  ======================== -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+
+      <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-3">
+        <span class="material-symbols-outlined text-primary">edit_square</span>
+        <h5 class="section-title mb-0">Rol</h5>
+      </div>
+
+      <form>
+
+        <div class="row g-4">
+
+          <div class="col-12 col-md-6 col-lg-4">
+            <label class="form-label label-custom">Nombre del rol</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Ej: Administrador Maestro">
+          </div>
+
+          <div class="col-12 col-md-6 col-lg-8">
+            <label class="form-label label-custom">Descripción</label>
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Defina las responsabilidades de este rol...">
+          </div>
+
+        </div>
+
+        <!-- AUDIT INFO -->
+        <div class="audit-box mt-4 p-4 rounded">
+
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="material-symbols-outlined text-muted small">info</span>
+            <span class="audit-title">Audit Information</span>
+          </div>
+
+          <div class="row g-3">
+
+            <div class="col-6 col-md-4 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Estado</small>
+                <div class="audit-value text-success">Activo</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Usuario creación</small>
+                <div class="audit-value">sys_admin</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Fecha creación</small>
+                <div class="audit-value">2023-10-24 08:30</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Usuario actualización</small>
+                <div class="audit-value">-</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Fecha actualización</small>
+                <div class="audit-value">-</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-4">
+          <button type="button" class="btn btn-outline-secondary">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary px-4">
+            Crear/Actualizar
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =======================
+        REGISTERED ROLES
+  ======================== -->
+  <div class="card shadow-sm border-0">
+
+    <div class="card-body border-bottom d-flex justify-content-between align-items-center">
+
+      <div class="d-flex align-items-center gap-2">
+        <span class="material-symbols-outlined text-primary">list_alt</span>
+        <h5 class="section-title mb-0">Registered Roles</h5>
+      </div>
+
+      <div class="search-box position-relative">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input
+          type="text"
+          class="form-control form-control-sm ps-5"
+          placeholder="Buscar rol...">
+      </div>
+
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td class="fw-semibold">Administrador System</td>
+            <td>Acceso total a todos los módulos y configuración del sistema.</td>
+            <td>
+              <span class="badge bg-success-subtle text-success status-badge">
+                ● Activo
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-icon text-primary">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn btn-sm btn-icon text-danger">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="fw-semibold">Operador Contable</td>
+            <td>Gestión de facturas, balances y reportes financieros mensuales.</td>
+            <td>
+              <span class="badge bg-success-subtle text-success status-badge">
+                ● Activo
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-icon text-primary">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn btn-sm btn-icon text-danger">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="fw-semibold">Consultor Externo</td>
+            <td>Acceso de solo lectura para auditorías y revisiones externas.</td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary status-badge">
+                ● Inactivo
+              </span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-icon text-primary">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn btn-sm btn-icon text-danger">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center">
+
+      <small class="text-muted">
+        Mostrando 3 de 15 roles registrados
+      </small>
+
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item disabled">
+            <button class="page-link">«</button>
+          </li>
+          <li class="page-item active">
+            <button class="page-link">1</button>
+          </li>
+          <li class="page-item">
+            <button class="page-link">2</button>
+          </li>
+          <li class="page-item">
+            <button class="page-link">3</button>
+          </li>
+          <li class="page-item">
+            <button class="page-link">»</button>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+
+  </div>
+
+</div>

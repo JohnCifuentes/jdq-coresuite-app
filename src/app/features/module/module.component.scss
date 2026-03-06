@@ -1,0 +1,56 @@
+.modulo-container {
+  background-color: #f5f7f8;
+}
+
+/* Labels superiores */
+.label-custom {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6c757d;
+  letter-spacing: 0.05rem;
+}
+
+/* Audit info */
+.audit-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #adb5bd;
+}
+
+.audit-value {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Search */
+.search-box {
+  width: 260px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #adb5bd;
+}
+
+/* Module icon */
+.module-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #e7f0ff;
+  color: #003366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Icon buttons */
+.btn-icon {
+  padding: 4px 6px;
+}

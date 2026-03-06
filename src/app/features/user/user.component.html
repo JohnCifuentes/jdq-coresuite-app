@@ -1,0 +1,245 @@
+<div class="container-fluid usuario-container py-4">
+
+  <!-- HEADER -->
+  <div class="mb-4">
+    <h2 class="fw-bold mb-1">Gestión de Usuarios</h2>
+    <p class="text-muted mb-0">
+      Creación, actualización y administración de cuentas de usuario del sistema.
+    </p>
+  </div>
+
+  <!-- =========================
+        INFORMACIÓN DEL USUARIO
+  ========================== -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+
+      <div class="d-flex align-items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-primary">person_add</span>
+        <h5 class="mb-0 section-title">Información del Usuario</h5>
+      </div>
+
+      <form>
+
+        <div class="row g-3">
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Primer Nombre</label>
+            <input type="text" class="form-control" placeholder="Ej. Juan">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Segundo Nombre</label>
+            <input type="text" class="form-control" placeholder="Ej. Alberto">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Primer Apellido</label>
+            <input type="text" class="form-control" placeholder="Ej. Pérez">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Segundo Apellido</label>
+            <input type="text" class="form-control" placeholder="Ej. Gómez">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Tipo Identificación</label>
+            <select class="form-select">
+              <option>Cédula de Ciudadanía</option>
+              <option>Cédula de Extranjería</option>
+              <option>Pasaporte</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Número Identificación</label>
+            <input type="text" class="form-control" placeholder="123456789">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" placeholder="usuarioempresa.com">
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="form-control" placeholder="+57 300 000 0000">
+          </div>
+
+        </div>
+
+        <!-- AUDIT -->
+        <div class="audit-box mt-4 p-3 rounded">
+          <div class="row g-3">
+
+            <div class="col-6 col-md">
+              <small class="audit-label">Estado</small>
+              <div>
+                <span class="badge bg-success-subtle text-success">Activo</span>
+              </div>
+            </div>
+
+            <div class="col-6 col-md">
+              <small class="audit-label">Usuario Creación</small>
+              <div class="audit-value">admin_system</div>
+            </div>
+
+            <div class="col-6 col-md">
+              <small class="audit-label">Fecha Creación</small>
+              <div class="audit-value">12/03/2024 08:30 AM</div>
+            </div>
+
+            <div class="col-6 col-md">
+              <small class="audit-label">Usuario Actualización</small>
+              <div class="audit-value">juan.perez</div>
+            </div>
+
+            <div class="col-6 col-md">
+              <small class="audit-label">Fecha Actualización</small>
+              <div class="audit-value">20/05/2024 14:15 PM</div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-4">
+          <button type="button" class="btn btn-outline-secondary">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary px-4">
+            Crear / Actualizar Usuario
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =========================
+        USUARIOS REGISTRADOS
+  ========================== -->
+  <div class="card shadow-sm border-0">
+
+    <div class="card-body border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <h5 class="mb-0 section-title">Usuarios Registrados</h5>
+
+      <div class="position-relative search-box">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input type="text" class="form-control form-control-sm ps-5" placeholder="Buscar usuario...">
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+
+        <thead class="table-light">
+          <tr>
+            <th>Nombre Completo</th>
+            <th>Identificación</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-primary-subtle text-primary">JP</div>
+                <div>Juan Alberto Pérez Gómez</div>
+              </div>
+            </td>
+            <td>CC 1.098.765.432</td>
+            <td>juan.perezempresa.com</td>
+            <td>+57 300 123 4567</td>
+            <td>
+              <span class="badge bg-success-subtle text-success">Activo</span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-icon text-primary">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn btn-sm btn-icon text-danger">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-primary-subtle text-primary">MR</div>
+                <div>Maria Elena Rodriguez</div>
+              </div>
+            </td>
+            <td>CC 1.112.233.444</td>
+            <td>m.rodriguezempresa.com</td>
+            <td>+57 310 987 6543</td>
+            <td>
+              <span class="badge bg-success-subtle text-success">Activo</span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-icon text-primary">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn btn-sm btn-icon text-danger">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar bg-secondary-subtle text-secondary">CL</div>
+                <div>Carlos López Ruiz</div>
+              </div>
+            </td>
+            <td>CE 887.654.321</td>
+            <td>c.lopezempresa.com</td>
+            <td>+57 315 222 3333</td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary">Inactivo</span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-icon text-primary">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button class="btn btn-sm btn-icon text-danger">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted">Mostrando 3 de 15 usuarios</small>
+
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item disabled">
+          <button class="page-link">«</button>
+        </li>
+        <li class="page-item active">
+          <button class="page-link">1</button>
+        </li>
+        <li class="page-item">
+          <button class="page-link">2</button>
+        </li>
+        <li class="page-item">
+          <button class="page-link">»</button>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+</div>
