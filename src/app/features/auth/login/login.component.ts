@@ -63,6 +63,9 @@ export class LoginComponent {
           this.loginService.setToken(res.contenido.token);
           this.usuarioService.getUsuarioByCorreoElectronicoAndPassword(creds).subscribe({
             next: userRes => {
+              if (!userRes.error && userRes.contenido) {
+                localStorage.setItem('auth_user', JSON.stringify(userRes.contenido));
+              }
               if (!userRes.error && userRes.contenido?.primerAcceso) {
                 Swal.fire({
                   icon: 'info',

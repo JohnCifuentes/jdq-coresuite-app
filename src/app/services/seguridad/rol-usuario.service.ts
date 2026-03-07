@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import {
   CreateRolUsuarioDTO,
   UpdateRolUsuarioDTO,
@@ -15,30 +17,51 @@ import { RespuestaDTO } from '../../models/response.dto';
 })
 export class RolUsuarioService {
   private apiUrl = `${environment.apiBaseUrl}/api/seguridad/rol-usuario`;
+  private storageKey = 'auth_token';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: object
+  ) {}
+
+  private getAuthOptions() {
+    if (!isPlatformBrowser(this.platformId)) {
+      return {};
+    }
+
+    const token = localStorage.getItem(this.storageKey);
+    if (!token) {
+      return {};
+    }
+
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      })
+    };
+  }
 
   createRolUsuario(createRolUsuarioDTO: CreateRolUsuarioDTO): Observable<RespuestaDTO<ResponseRolUsuarioDTO>> {
-    return this.http.post<RespuestaDTO<ResponseRolUsuarioDTO>>(this.apiUrl, createRolUsuarioDTO);
+    return this.http.post<RespuestaDTO<ResponseRolUsuarioDTO>>(this.apiUrl, createRolUsuarioDTO, this.getAuthOptions());
   }
 
   updateRolUsuario(id: number, updateRolUsuarioDTO: UpdateRolUsuarioDTO): Observable<RespuestaDTO<ResponseRolUsuarioDTO>> {
-    return this.http.put<RespuestaDTO<ResponseRolUsuarioDTO>>(`${this.apiUrl}/${id}`, updateRolUsuarioDTO);
+    return this.http.put<RespuestaDTO<ResponseRolUsuarioDTO>>(`${this.apiUrl}/${id}`, updateRolUsuarioDTO, this.getAuthOptions());
   }
 
   inactiveRolUsuario(id: number, inactiveRolUsuarioDTO: InactiveRolUsuarioDTO): Observable<RespuestaDTO<ResponseRolUsuarioDTO>> {
-    return this.http.put<RespuestaDTO<ResponseRolUsuarioDTO>>(`${this.apiUrl}/${id}/inactive`, inactiveRolUsuarioDTO);
+    return this.http.put<RespuestaDTO<ResponseRolUsuarioDTO>>(`${this.apiUrl}/${id}/inactive`, inactiveRolUsuarioDTO, this.getAuthOptions());
   }
 
   getAllRolUsuarios(): Observable<RespuestaDTO<ResponseRolUsuarioDTO[]>> {
-    return this.http.get<RespuestaDTO<ResponseRolUsuarioDTO[]>>(this.apiUrl);
+    return this.http.get<RespuestaDTO<ResponseRolUsuarioDTO[]>>(this.apiUrl, this.getAuthOptions());
   }
 
   getRolUsuarioById(id: number): Observable<RespuestaDTO<ResponseRolUsuarioDTO>> {
-    return this.http.get<RespuestaDTO<ResponseRolUsuarioDTO>>(`${this.apiUrl}/${id}`);
+    return this.http.get<RespuestaDTO<ResponseRolUsuarioDTO>>(`${this.apiUrl}/${id}`, this.getAuthOptions());
   }
 
   getRolUsuariosByEmpresa(empresaId: number): Observable<ResponseRolUsuarioDTO[]> {
-    return this.http.get<ResponseRolUsuarioDTO[]>(`${this.apiUrl}/${empresaId}/empresa`);
+    return this.http.get<ResponseRolUsuarioDTO[]>(`${this.apiUrl}/${empresaId}/empresa`, this.getAuthOptions());
   }
 }
