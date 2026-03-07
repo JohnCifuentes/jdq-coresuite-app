@@ -44,7 +44,9 @@ export class UsuarioService {
   }
 
   getUsuarioByCorreoElectronicoAndPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
-    return this.http.post<RespuestaDTO<ResponseUsuarioDTO>>(`${this.apiUrl}/usuario/correo/password`, usuarioCredencialesDTO);
+    return this.http.get<RespuestaDTO<ResponseUsuarioDTO>>(
+      `${this.apiUrl}/obtener/${encodeURIComponent(usuarioCredencialesDTO.correoElectronico)}/${encodeURIComponent(usuarioCredencialesDTO.password)}/usuario`
+    );
   }
 
   asignarPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
@@ -60,5 +62,12 @@ export class UsuarioService {
 
   actualizarPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
     return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(`${this.apiUrl}/actualizar/password`, usuarioCredencialesDTO);
+  }
+
+  bloquearUsuario(correoElectronico: string): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
+    return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(
+      `${this.apiUrl}/${encodeURIComponent(correoElectronico)}/bloquear/usuario`,
+      {}
+    );
   }
 }

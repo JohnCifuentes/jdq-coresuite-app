@@ -14,16 +14,10 @@ export class CodigoService {
   constructor(private http: HttpClient) {}
 
   generar(codigoDTO: CreateCodigoDTO): Observable<RespuestaDTO<string>> {
-    return this.http.post<RespuestaDTO<string>>(
-      `${this.apiUrl}/generar?correoElectronico=${encodeURIComponent(codigoDTO.correoElectronico)}`,
-      {}
-    );
+    return this.http.post<RespuestaDTO<string>>(`${this.apiUrl}/generar`, codigoDTO);
   }
 
   confirmarCodigo(codigoDTO: ConfirmarUsuarioCodigoDTO): Observable<RespuestaDTO<string>> {
-    return this.http.post<RespuestaDTO<string>>(
-      `${this.apiUrl}/confirmar?correoElectronico=${encodeURIComponent(codigoDTO.correoElectronico)}&codigo=${encodeURIComponent(codigoDTO.codigo)}`,
-      {}
-    );
+    return this.http.post<RespuestaDTO<string>>(`${this.apiUrl}/confirmar`, codigoDTO);
   }
 }

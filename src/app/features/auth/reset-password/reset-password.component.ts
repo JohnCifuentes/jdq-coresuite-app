@@ -16,6 +16,7 @@ import Swal from 'sweetalert2';
 export class ResetPasswordComponent implements OnInit {
   form: FormGroup;
   email: string = '';
+  firstAccess: boolean = false;
   showPassword = false;
   showConfirmPassword = false;
   loading = false;
@@ -35,6 +36,7 @@ export class ResetPasswordComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       this.email = params['email'] || '';
+      this.firstAccess = params['firstAccess'] === 'true';
       if (!this.email) {
         this.router.navigate(['/forgot-password']);
       }
