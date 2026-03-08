@@ -19,52 +19,63 @@
         <h5 class="mb-0 section-title">Información del Usuario</h5>
       </div>
 
-      <form>
+      <form [formGroup]="form" (ngSubmit)="submitUsuario()">
 
         <div class="row g-3">
 
           <div class="col-12 col-md-3">
             <label class="form-label">Primer Nombre</label>
-            <input type="text" class="form-control" placeholder="Ej. Juan">
+            <input type="text" class="form-control" formControlName="nombre1" placeholder="Ej. Juan">
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Segundo Nombre</label>
-            <input type="text" class="form-control" placeholder="Ej. Alberto">
+            <input type="text" class="form-control" formControlName="nombre2" placeholder="Ej. Alberto">
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Primer Apellido</label>
-            <input type="text" class="form-control" placeholder="Ej. Pérez">
+            <input type="text" class="form-control" formControlName="apellido1" placeholder="Ej. Pérez">
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Segundo Apellido</label>
-            <input type="text" class="form-control" placeholder="Ej. Gómez">
+            <input type="text" class="form-control" formControlName="apellido2" placeholder="Ej. Gómez">
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Tipo Identificación</label>
-            <select class="form-select">
-              <option>Cédula de Ciudadanía</option>
-              <option>Cédula de Extranjería</option>
-              <option>Pasaporte</option>
+            <select class="form-select" formControlName="tipoIdentificacionId">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let tipo of tiposIdentificacion" [ngValue]="tipo.id">{{ tipo.nombre }}</option>
             </select>
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Número Identificación</label>
-            <input type="text" class="form-control" placeholder="123456789">
+            <input type="text" class="form-control" formControlName="numeroIdentificacion" placeholder="123456789">
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Correo Electrónico</label>
-            <input type="email" class="form-control" placeholder="usuarioempresa.com">
+            <input type="email" class="form-control" formControlName="correoElectronico" placeholder="usuario@empresa.com">
+            <small class="text-danger" *ngIf="form.get('correoElectronico')?.touched && form.get('correoElectronico')?.hasError('required')">
+              El correo electrónico es obligatorio.
+            </small>
+            <small class="text-danger" *ngIf="form.get('correoElectronico')?.touched && form.get('correoElectronico')?.hasError('email')">
+              Ingrese un correo electrónico con formato válido.
+            </small>
           </div>
 
           <div class="col-12 col-md-3">
             <label class="form-label">Teléfono</label>
-            <input type="tel" class="form-control" placeholder="+57 300 000 0000">
+            <input type="tel" class="form-control" formControlName="telefono" placeholder="+57 300 000 0000">
+            <small class="text-danger" *ngIf="form.get('telefono')?.touched && form.get('telefono')?.hasError('required')">
+              El teléfono es obligatorio.
+            </small>
+            <small class="text-danger" *ngIf="form.get('telefono')?.touched && form.get('telefono')?.hasError('pattern')">
+              Ingrese un teléfono válido (10 dígitos, opcional prefijo +57).
+            </small>
           </div>
 
         </div>
@@ -82,7 +93,7 @@
 
             <div class="col-6 col-md">
               <small class="audit-label">Usuario Creación</small>
-              <div class="audit-value">admin_system</div>
+              <div class="audit-value">{{ loggedUserName }}</div>
             </div>
 
             <div class="col-6 col-md">
@@ -92,23 +103,23 @@
 
             <div class="col-6 col-md">
               <small class="audit-label">Usuario Actualización</small>
-              <div class="audit-value">juan.perez</div>
+              <div class="audit-value">{{ usuarioActualizacion }}</div>
             </div>
 
             <div class="col-6 col-md">
               <small class="audit-label">Fecha Actualización</small>
-              <div class="audit-value">20/05/2024 14:15 PM</div>
+              <div class="audit-value">{{ fechaActualizacion }}</div>
             </div>
 
           </div>
         </div>
 
         <div class="d-flex justify-content-end gap-3 mt-4">
-          <button type="button" class="btn btn-outline-secondary">
+          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
             Cancelar
           </button>
-          <button type="submit" class="btn btn-primary px-4">
-            Crear / Actualizar Usuario
+          <button type="submit" class="btn btn-primary px-4" [disabled]="form.invalid || saving">
+            {{ isEditMode ? 'Actualizar Usuario' : 'Crear Usuario' }}
           </button>
         </div>
 
@@ -138,8 +149,9 @@
         <thead class="table-light">
           <tr>
             <th>Nombre Completo</th>
-            <th>Identificación</th>
-            <th>Correo</th>
+            <th>Tipo Identificación</th>
+            <th>Número Identificación</th>
+            <th>Correo electrónico</th>
             <th>Teléfono</th>
             <th>Estado</th>
             <th class="text-center">Acciones</th>
@@ -148,70 +160,41 @@
 
         <tbody>
 
-          <tr>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-primary-subtle text-primary">JP</div>
-                <div>Juan Alberto Pérez Gómez</div>
-              </div>
-            </td>
-            <td>CC 1.098.765.432</td>
-            <td>juan.perezempresa.com</td>
-            <td>+57 300 123 4567</td>
-            <td>
-              <span class="badge bg-success-subtle text-success">Activo</span>
-            </td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-icon text-primary">
-                <span class="material-symbols-outlined">edit</span>
-              </button>
-              <button class="btn btn-sm btn-icon text-danger">
-                <span class="material-symbols-outlined">delete</span>
-              </button>
-            </td>
+          <tr *ngIf="loading">
+            <td colspan="7" class="text-center py-4 text-muted">Cargando usuarios...</td>
           </tr>
 
-          <tr>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-primary-subtle text-primary">MR</div>
-                <div>Maria Elena Rodriguez</div>
-              </div>
-            </td>
-            <td>CC 1.112.233.444</td>
-            <td>m.rodriguezempresa.com</td>
-            <td>+57 310 987 6543</td>
-            <td>
-              <span class="badge bg-success-subtle text-success">Activo</span>
-            </td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-icon text-primary">
-                <span class="material-symbols-outlined">edit</span>
-              </button>
-              <button class="btn btn-sm btn-icon text-danger">
-                <span class="material-symbols-outlined">delete</span>
-              </button>
-            </td>
+          <tr *ngIf="!loading && errorMessage">
+            <td colspan="7" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
 
-          <tr>
+          <tr *ngIf="!loading && !errorMessage && usuarios.length === 0">
+            <td colspan="7" class="text-center py-4 text-muted">No hay usuarios registrados para la empresa.</td>
+          </tr>
+
+          <tr *ngFor="let usuario of usuarios">
             <td>
               <div class="d-flex align-items-center gap-3">
-                <div class="avatar bg-secondary-subtle text-secondary">CL</div>
-                <div>Carlos López Ruiz</div>
+                <div class="avatar bg-primary-subtle text-primary">{{ getIniciales(usuario) }}</div>
+                <div>{{ getNombreCompleto(usuario) }}</div>
               </div>
             </td>
-            <td>CE 887.654.321</td>
-            <td>c.lopezempresa.com</td>
-            <td>+57 315 222 3333</td>
+            <td>{{ usuario.tipoIdentificacion.nombre }}</td>
+            <td>{{ usuario.numeroIdentificacion }}</td>
+            <td>{{ usuario.correoElectronico }}</td>
+            <td>{{ usuario.telefono }}</td>
             <td>
-              <span class="badge bg-secondary-subtle text-secondary">Inactivo</span>
+              <span
+                class="badge"
+                [ngClass]="isActivo(usuario.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                {{ isActivo(usuario.estado) ? 'Activo' : 'Inactivo' }}
+              </span>
             </td>
             <td class="text-center">
-              <button class="btn btn-sm btn-icon text-primary">
+              <button class="btn btn-sm btn-icon text-primary" type="button" (click)="editUsuario(usuario)">
                 <span class="material-symbols-outlined">edit</span>
               </button>
-              <button class="btn btn-sm btn-icon text-danger">
+              <button class="btn btn-sm btn-icon text-danger" type="button" (click)="confirmDeleteUsuario(usuario)">
                 <span class="material-symbols-outlined">delete</span>
               </button>
             </td>
@@ -222,7 +205,7 @@
     </div>
 
     <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted">Mostrando 3 de 15 usuarios</small>
+      <small class="text-muted">Mostrando {{ usuarios.length }} usuarios registrados</small>
 
       <ul class="pagination pagination-sm mb-0">
         <li class="page-item disabled">

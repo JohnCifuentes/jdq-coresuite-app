@@ -18,6 +18,9 @@ import { UserComponent } from './features/user/user.component';
 import { RolUserComponent } from './features/rol-user/rol-user.component';
 import { ModuleComponent } from './features/module/module.component';
 import { InterfacesComponent } from './features/interfaces/interfaces.component';
+import { ListaValoresComponent } from './features/lista-valores/lista-valores.component';
+import { ListaValoresDetalleComponent } from './features/lista-valores-detalle/lista-valores-detalle.component';
+import { TipoCampoComponent } from './features/tipo-campo/tipo-campo.component';
 
 export const routes: Routes = [
   {
@@ -51,7 +54,10 @@ export const routes: Routes = [
       { path: 'user', component: UserComponent },
       { path: 'rol-user', component: RolUserComponent },
       { path: 'module', component: ModuleComponent },
-      { path: 'interface', component: InterfacesComponent }
+      { path: 'interface', component: InterfacesComponent },
+      { path: 'lista-valores', component: ListaValoresComponent },
+      { path: 'lista-valores-detalle', component: ListaValoresDetalleComponent },
+      { path: 'tipo-campo', component: TipoCampoComponent }
     ]
   }
 ];

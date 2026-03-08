@@ -3,36 +3,51 @@
     <nav class="flex-grow-1 px-3">
         <ul class="nav nav-pills flex-column gap-2">
             <li class="nav-item">
-                <a class="nav-link active d-flex align-items-center gap-2" href="" routerLink="/app/rol">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/rol" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
                     <span>Roles</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-secondary d-flex align-items-center gap-2" href="" routerLink="/app/user">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/user" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
                     <span>Usuarios</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-secondary d-flex align-items-center gap-2" href="" routerLink="/app/rol-user">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/rol-user" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
                     <span>Rol/Usuario</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-secondary d-flex align-items-center gap-2" href="" routerLink="/app/module">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/module" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
                     <span>Módulos</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link text-secondary d-flex align-items-center gap-2" href="" routerLink="/app/interface">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/interface" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
                     <span>Interfaces</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/lista-valores" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <span>Lista de Valores</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/lista-valores-detalle" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <span>Lista Valores Detalle</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/tipo-campo" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                    <span>Tipo Campo</span>
+                </a>
+            </li>
+            <!--
             <li class="nav-item">
                 <a class="nav-link text-secondary d-flex align-items-center gap-2" href="#">
                     <span>Permisos por Rol</span>
                 </a>
             </li>
-            <!--
             <li class="nav-item">
                 <a class="nav-link text-secondary d-flex align-items-center gap-2" href="#">
                     <span>Navegabilidad</span>
@@ -43,15 +58,19 @@
     </nav>
     <!-- User Section -->
     <div class="p-3 border-top">
-        <div class="d-flex align-items-center gap-3 bg-light rounded p-2">
-            <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center"
-                style="width:40px;height:40px;">
+        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
+            <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center flex-shrink-0"
+                style="width:44px;height:44px;min-width:44px;">
                 {{ userInitials }}
             </div>
-            <div>
-                <div class="fw-semibold small">{{ userName }}</div>
-                <div class="text-muted small">{{ userRole }}</div>
+            <div class="flex-grow-1 overflow-hidden">
+                <div class="fw-semibold small text-truncate">{{ userName }}</div>
+                <div class="text-muted small text-truncate">{{ userRole }}</div>
             </div>
         </div>
+        <button type="button" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2" (click)="logout()">
+            <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
+            <span>Cerrar sesión</span>
+        </button>
     </div>
 </aside>

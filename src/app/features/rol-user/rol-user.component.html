@@ -21,41 +21,62 @@
           <span class="material-symbols-outlined search-icon">search</span>
           <input type="text"
                  class="form-control ps-5"
-                 placeholder="Ingrese nombre, ID o correo electrónico del usuario...">
+                 placeholder="Ingrese nombre, ID o correo electrónico del usuario..."
+                 [(ngModel)]="searchQuery"
+                 (input)="onSearchUsuario(searchQuery)">
+        </div>
+
+        <!-- Dropdown de usuarios filtrados -->
+        <div class="list-group mt-2" *ngIf="usuariosFiltrados.length > 0">
+          <button type="button" 
+                  class="list-group-item list-group-item-action"
+                  *ngFor="let usuario of usuariosFiltrados"
+                  (click)="selectUsuario(usuario)">
+            <div class="d-flex align-items-center gap-3">
+              <div class="avatar bg-primary-subtle text-primary" style="width: 32px; height: 32px;">
+                {{ getIniciales(usuario) }}
+              </div>
+              <div>
+                <div class="fw-medium small">{{ getNombreCompleto(usuario) }}</div>
+                <small class="text-muted">{{ usuario.correoElectronico }}</small>
+              </div>
+            </div>
+          </button>
         </div>
       </div>
 
       <div class="row g-4">
 
-        <!-- INFO USUARIO -->
+        <!-- INFO USUARIO SELECCIONADO -->
         <div class="col-12 col-lg-6">
-          <div class="user-card d-flex align-items-center gap-4 p-3 rounded">
-
-            <div class="position-relative">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfaD3Dm2rlX2tmh_drKByF7dS3EP6VZ009hjHKcUXXYm6E6lRkRjc9T07460S0mfQfUSh8p3M1nsG372GnUzAbH5IDleGAOWardZv_c2EuQMMnWZw2NbfWrXJBUdawTLQof2PJEKV0q_AQZNW9sJjqGm3LkIQ4zb4FP2W6z66HwxaG00FuAmxaTl3DDND3FntsJAHrqKgvRqRvwYB0iZxGfMK0P9UHVT8iHWXL0U0n9IuH16VLiL0OuHZlnWHhpdM4QaB7NoHJn4H8"
-                   class="user-avatar">
-              <span class="status-dot"></span>
+          <div class="user-card d-flex align-items-center gap-4 p-3 rounded" *ngIf="selectedUsuarioId; else noUserSelected">
+            <div class="avatar bg-primary-subtle text-primary d-flex justify-content-center align-items-center"
+                 style="width: 50px; height: 50px; font-size: 20px; font-weight: bold;">
+              {{ getIniciales(usuarioSeleccionado!) }}
             </div>
 
-            <div>
+            <div class="flex-grow-1">
               <h5 class="mb-1 text-primary fw-bold">
-                Juan Carlos Pérez
+                {{ getNombreCompleto(usuarioSeleccionado!) }}
               </h5>
               <p class="mb-1 text-muted small">
-                juan.perezxempresa.com
+                {{ usuarioSeleccionado?.correoElectronico }}
               </p>
 
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success-subtle text-success">
-                  Conectado
+              <div>
+                <span class="badge"
+                      [ngClass]="isActivo(usuarioSeleccionado?.estado!) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                  {{ isActivo(usuarioSeleccionado?.estado!) ? 'Activo' : 'Inactivo' }}
                 </span>
-                <small class="text-muted">
-                  Último acceso: Hace 10 minutos
-                </small>
               </div>
             </div>
-
           </div>
+
+          <ng-template #noUserSelected>
+            <div class="alert alert-info" role="alert">
+              Seleccione un usuario para asignar roles.
+            </div>
+          </ng-template>
         </div>
 
         <!-- SELECCIÓN DE ROLES -->
@@ -63,43 +84,19 @@
           <label class="form-label fw-medium">Selección de Roles</label>
 
           <div class="row g-2">
-
-            <div class="col-6">
+            <div class="col-6" *ngFor="let rol of rolesDisponibles">
               <div class="form-check role-check">
-                <input class="form-check-input" type="checkbox" checked>
-                <label class="form-check-label">
-                  Administrador Global
+                <input class="form-check-input" 
+                       type="checkbox"
+                       [id]="'rol-' + rol.id"
+                       [checked]="isRolChecked(rol.id)"
+                       (change)="toggleRol(rol.id)"
+                       [disabled]="!selectedUsuarioId">
+                <label class="form-check-label" [for]="'rol-' + rol.id">
+                  {{ rol.nombre }}
                 </label>
               </div>
             </div>
-
-            <div class="col-6">
-              <div class="form-check role-check">
-                <input class="form-check-input" type="checkbox">
-                <label class="form-check-label">
-                  Editor de Contenido
-                </label>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="form-check role-check">
-                <input class="form-check-input" type="checkbox" checked>
-                <label class="form-check-label">
-                  Auditor Senior
-                </label>
-              </div>
-            </div>
-
-            <div class="col-6">
-              <div class="form-check role-check">
-                <input class="form-check-input" type="checkbox">
-                <label class="form-check-label">
-                  Soporte Técnico
-                </label>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -112,21 +109,26 @@
 
           <div class="d-flex align-items-center gap-1">
             <span class="material-symbols-outlined small">history_edu</span>
-            <span>Creado: 12/01/2024 by admin_sys</span>
+            <span>Usuario Creación: {{ loggedUserName }}</span>
           </div>
 
           <div class="d-flex align-items-center gap-1">
             <span class="material-symbols-outlined small">update</span>
-            <span>Modificado: 05/03/2024 by super_user</span>
+            <span>Usuario Actualización: {{ usuarioActualizacion }}</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-1">
+            <span class="material-symbols-outlined small">schedule</span>
+            <span>{{ fechaActualizacion }}</span>
           </div>
 
         </div>
 
         <div class="d-flex gap-3">
-          <button class="btn btn-outline-secondary">
+          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
             Cancelar
           </button>
-          <button class="btn btn-primary d-flex align-items-center gap-2">
+          <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="guardarAsignacion()" [disabled]="!selectedUsuarioId || selectedRolIds.size === 0 || saving">
             <span class="material-symbols-outlined small">save</span>
             Guardar Asignación
           </button>
@@ -160,7 +162,7 @@
         <thead class="table-light">
           <tr>
             <th>Usuario</th>
-            <th>Roles Asignados</th>
+            <th>Rol Asignado</th>
             <th>Fecha Asignación</th>
             <th>Estado</th>
             <th class="text-end">Acciones</th>
@@ -169,86 +171,45 @@
 
         <tbody>
 
-          <tr>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar">JP</div>
-                <div>
-                  <div class="fw-medium">Juan Pérez</div>
-                  <small class="text-muted">juan.pmail.com</small>
-                </div>
-              </div>
-            </td>
-            <td>
-              <span class="badge bg-primary-subtle text-primary me-1">Admin</span>
-              <span class="badge bg-primary-subtle text-primary">Auditor</span>
-            </td>
-            <td>14/02/2024</td>
-            <td>
-              <span class="status-indicator bg-success"></span>
-              Activo
-            </td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-icon text-primary">
-                <span class="material-symbols-outlined">edit_note</span>
-              </button>
-              <button class="btn btn-sm btn-icon text-danger">
-                <span class="material-symbols-outlined">delete_forever</span>
-              </button>
-            </td>
+          <tr *ngIf="loading">
+            <td colspan="5" class="text-center py-4 text-muted">Cargando asignaciones...</td>
           </tr>
 
-          <tr>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                <div class="avatar">MG</div>
-                <div>
-                  <div class="fw-medium">María García</div>
-                  <small class="text-muted">m.garciamail.com</small>
-                </div>
-              </div>
-            </td>
-            <td>
-              <span class="badge bg-primary-subtle text-primary">Editor</span>
-            </td>
-            <td>01/03/2024</td>
-            <td>
-              <span class="status-indicator bg-secondary"></span>
-              Inactivo
-            </td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-icon text-primary">
-                <span class="material-symbols-outlined">edit_note</span>
-              </button>
-              <button class="btn btn-sm btn-icon text-danger">
-                <span class="material-symbols-outlined">delete_forever</span>
-              </button>
-            </td>
+          <tr *ngIf="!loading && errorMessage">
+            <td colspan="5" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
 
-          <tr>
+          <tr *ngIf="!loading && !errorMessage && asignacionesActuales.length === 0">
+            <td colspan="5" class="text-center py-4 text-muted">No hay asignaciones registradas para la empresa.</td>
+          </tr>
+
+          <tr *ngFor="let asignacion of asignacionesActuales">
             <td>
               <div class="d-flex align-items-center gap-3">
-                <div class="avatar">RL</div>
+                <div class="avatar bg-primary-subtle text-primary d-flex justify-content-center align-items-center"
+                     style="width: 32px; height: 32px;">
+                  {{ asignacion.usuario.nombre1.charAt(0) }}{{ asignacion.usuario.apellido1.charAt(0) }}
+                </div>
                 <div>
-                  <div class="fw-medium">Ricardo Luna</div>
-                  <small class="text-muted">r.lunamail.com</small>
+                  <div class="fw-medium small">{{ asignacion.usuario.nombre1 }} {{ asignacion.usuario.apellido1 }}</div>
                 </div>
               </div>
             </td>
             <td>
-              <span class="badge bg-primary-subtle text-primary">Soporte</span>
+              <span class="badge bg-primary-subtle text-primary">{{ asignacion.rol.nombre }}</span>
             </td>
-            <td>28/02/2024</td>
+            <td>{{ asignacion.fechaCreacion }}</td>
             <td>
-              <span class="status-indicator bg-success"></span>
-              Activo
+              <span class="badge"
+                    [ngClass]="isActivo(asignacion.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                {{ isActivo(asignacion.estado) ? 'Activo' : 'Inactivo' }}
+              </span>
             </td>
             <td class="text-end">
-              <button class="btn btn-sm btn-icon text-primary">
+              <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editarAsignacion(asignacion)">
                 <span class="material-symbols-outlined">edit_note</span>
               </button>
-              <button class="btn btn-sm btn-icon text-danger">
+              <button type="button" class="btn btn-sm btn-icon text-danger" (click)="confirmarEliminarAsignacion(asignacion)">
                 <span class="material-symbols-outlined">delete_forever</span>
               </button>
             </td>
@@ -260,17 +221,8 @@
 
     <div class="card-footer d-flex justify-content-between align-items-center">
       <small class="text-muted fst-italic">
-        Mostrando 3 de 42 asignaciones
+        Mostrando {{ asignacionesActuales.length }} asignaciones registradas
       </small>
-
-      <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-secondary">
-          Anterior
-        </button>
-        <button class="btn btn-sm btn-outline-secondary">
-          Siguiente
-        </button>
-      </div>
     </div>
 
   </div>

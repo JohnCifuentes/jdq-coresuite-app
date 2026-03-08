@@ -3,39 +3,36 @@ import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import {
-  CreateModuloDTO,
-  UpdateModuloDTO,
-  ResponseModuloDTO
-} from '../../models/operacion/modulo.models';
-import { ModuloService } from '../../services/operacion/modulo.service';
+  CreateListaValoresDTO,
+  ResponseListaValoresDTO,
+  UpdateListaValoresDTO
+} from '../../models/operacion/lista-valores.models';
+import { ListaValoresService } from '../../services/operacion/lista-valores.service';
 
 @Component({
-  selector: 'app-module',
+  selector: 'app-lista-valores',
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './module.component.html',
-  styleUrl: './module.component.scss'
+  templateUrl: './lista-valores.component.html',
+  styleUrl: './lista-valores.component.scss'
 })
-export class ModuleComponent implements OnInit {
-  modulos: ResponseModuloDTO[] = [];
+export class ListaValoresComponent implements OnInit {
+  listaValores: ResponseListaValoresDTO[] = [];
   form: FormGroup;
   loading = false;
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
   empresaId: number | null = null;
-  selectedModuloId: number | null = null;
-  usuarioActualizacion = '-';
-  fechaActualizacion = '-';
+  selectedListaValoresId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private moduloService: ModuloService,
+    private listaValoresService: ListaValoresService,
     @Inject(PLATFORM_ID) private platformId: object
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
-      descripcion: ['', Validators.required],
-      indice: [0, [Validators.required, Validators.min(0)]]
+      descripcion: ['', Validators.required]
     });
   }
 
@@ -70,17 +67,17 @@ export class ModuleComponent implements OnInit {
       }
 
       this.empresaId = empresaId;
-      this.loadModulosByEmpresa(empresaId);
+      this.loadListaValoresByEmpresa(empresaId);
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
     }
   }
 
   get isEditMode(): boolean {
-    return this.selectedModuloId !== null;
+    return this.selectedListaValoresId !== null;
   }
 
-  submitModulo(): void {
+  submitListaValores(): void {
     if (this.form.invalid || !this.empresaId) {
       this.form.markAllAsTouched();
       return;
@@ -89,18 +86,17 @@ export class ModuleComponent implements OnInit {
     this.saving = true;
 
     if (this.isEditMode) {
-      this.updateModulo();
+      this.updateListaValores();
       return;
     }
 
-    const payload: CreateModuloDTO = {
+    const payload: CreateListaValoresDTO = {
       empresaId: this.empresaId,
       nombre: this.form.get('nombre')?.value?.trim(),
-      descripcion: this.form.get('descripcion')?.value?.trim(),
-      indice: Number(this.form.get('indice')?.value)
+      descripcion: this.form.get('descripcion')?.value?.trim()
     };
 
-    this.moduloService.createModulo(payload).subscribe({
+    this.listaValoresService.createListaValores(payload).subscribe({
       next: (response) => {
         this.saving = false;
 
@@ -108,17 +104,17 @@ export class ModuleComponent implements OnInit {
           Swal.fire({
             icon: 'success',
             title: 'Operación exitosa',
-            text: 'El módulo fue creado correctamente.',
+            text: 'La lista de valores fue creada correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
           this.resetForm();
-          this.loadModulosByEmpresa(this.empresaId!);
+          this.loadListaValoresByEmpresa(this.empresaId!);
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible crear el módulo.',
+            text: 'No fue posible crear la lista de valores.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -128,30 +124,27 @@ export class ModuleComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible crear el módulo.',
+          text: 'No fue posible crear la lista de valores.',
           confirmButtonText: 'Aceptar'
         });
       }
     });
   }
 
-  editModulo(modulo: ResponseModuloDTO): void {
-    this.selectedModuloId = modulo.id;
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
+  editListaValores(item: ResponseListaValoresDTO): void {
+    this.selectedListaValoresId = item.id;
 
     this.form.patchValue({
-      nombre: modulo.nombre,
-      descripcion: modulo.descripcion,
-      indice: modulo.indice
+      nombre: item.nombre,
+      descripcion: item.descripcion
     });
   }
 
-  async confirmDeleteModulo(modulo: ResponseModuloDTO): Promise<void> {
+  async confirmDeleteListaValores(item: ResponseListaValoresDTO): Promise<void> {
     const result = await Swal.fire({
       icon: 'warning',
       title: 'Confirmar acción',
-      text: `¿Está seguro de inactivar el módulo ${modulo.nombre}?`,
+      text: `¿Está seguro de inactivar la lista de valores ${item.nombre}?`,
       showCancelButton: true,
       confirmButtonText: 'Sí',
       cancelButtonText: 'Cancelar'
@@ -161,60 +154,53 @@ export class ModuleComponent implements OnInit {
       return;
     }
 
-    this.inactiveModulo(modulo.id);
+    this.inactiveListaValores(item);
   }
 
   resetForm(): void {
     this.form.reset({
       nombre: '',
-      descripcion: '',
-      indice: 0
+      descripcion: ''
     });
-
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
-    this.selectedModuloId = null;
+    this.selectedListaValoresId = null;
   }
 
   isActivo(estado: string): boolean {
     return estado?.toUpperCase() === 'ACTIVO' || estado?.toUpperCase() === 'A';
   }
 
-  private updateModulo(): void {
-    if (!this.selectedModuloId || !this.empresaId) {
+  private updateListaValores(): void {
+    if (!this.selectedListaValoresId || !this.empresaId) {
       this.saving = false;
       return;
     }
 
-    const payload: UpdateModuloDTO = {
+    const payload: UpdateListaValoresDTO = {
       empresaId: this.empresaId,
       nombre: this.form.get('nombre')?.value?.trim(),
       descripcion: this.form.get('descripcion')?.value?.trim(),
-      indice: Number(this.form.get('indice')?.value),
       estado: 'A'
     };
 
-    this.moduloService.updateModulo(this.selectedModuloId, payload).subscribe({
+    this.listaValoresService.updateListaValores(this.selectedListaValoresId, payload).subscribe({
       next: (response) => {
         this.saving = false;
 
         if (!response.error) {
-          this.usuarioActualizacion = this.loggedUserName;
-          this.fechaActualizacion = this.getCurrentDateTime();
-
           Swal.fire({
             icon: 'success',
             title: 'Operación exitosa',
-            text: 'El módulo fue actualizado correctamente.',
+            text: 'La lista de valores fue actualizada correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
-          this.loadModulosByEmpresa(this.empresaId!);
+          this.resetForm();
+          this.loadListaValoresByEmpresa(this.empresaId!);
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible actualizar el módulo.',
+            text: 'No fue posible actualizar la lista de valores.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -224,42 +210,45 @@ export class ModuleComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible actualizar el módulo.',
+          text: 'No fue posible actualizar la lista de valores.',
           confirmButtonText: 'Aceptar'
         });
       }
     });
   }
 
-  private inactiveModulo(moduloId: number): void {
-    const payload: UpdateModuloDTO = {
-      empresaId: this.empresaId!,
-      nombre: '',
-      descripcion: '',
-      indice: 0,
+  private inactiveListaValores(item: ResponseListaValoresDTO): void {
+    if (!this.empresaId) {
+      return;
+    }
+
+    const payload: UpdateListaValoresDTO = {
+      empresaId: this.empresaId,
+      nombre: item.nombre,
+      descripcion: item.descripcion,
       estado: 'I'
     };
 
-    this.moduloService.updateModulo(moduloId, payload).subscribe({
+    this.listaValoresService.updateListaValores(item.id, payload).subscribe({
       next: (response) => {
         if (!response.error) {
           Swal.fire({
             icon: 'success',
             title: 'Operación exitosa',
-            text: 'El módulo fue inactivado correctamente.',
+            text: 'La lista de valores fue inactivada correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
-          if (this.selectedModuloId === moduloId) {
+          if (this.selectedListaValoresId === item.id) {
             this.resetForm();
           }
 
-          this.loadModulosByEmpresa(this.empresaId!);
+          this.loadListaValoresByEmpresa(this.empresaId!);
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible inactivar el módulo.',
+            text: 'No fue posible inactivar la lista de valores.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -268,58 +257,26 @@ export class ModuleComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible inactivar el módulo.',
+          text: 'No fue posible inactivar la lista de valores.',
           confirmButtonText: 'Aceptar'
         });
       }
     });
   }
 
-  private loadModulosByEmpresa(empresaId: number): void {
+  private loadListaValoresByEmpresa(empresaId: number): void {
     this.loading = true;
     this.errorMessage = null;
 
-    this.moduloService.getModulosByEmpresa(empresaId).subscribe({
+    this.listaValoresService.getListaValoresByEmpresa(empresaId).subscribe({
       next: (response) => {
-        this.modulos = (response?.contenido ?? []).map((modulo) => this.normalizeModulo(modulo));
+        this.listaValores = response?.contenido ?? [];
         this.loading = false;
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'No fue posible cargar los módulos registrados.';
+        this.errorMessage = 'No fue posible cargar las listas de valores registradas.';
       }
     });
-  }
-
-  getIndiceDisplay(modulo: ResponseModuloDTO): string {
-    const indice = modulo?.indice;
-
-    if (indice === null || indice === undefined) {
-      return '-';
-    }
-
-    return String(indice);
-  }
-
-  private normalizeModulo(modulo: ResponseModuloDTO): ResponseModuloDTO {
-    const rawModulo = modulo as unknown as Record<string, unknown>;
-    const rawIndice = rawModulo['indice'] ?? rawModulo['index'] ?? rawModulo['orden'];
-    const parsedIndice = Number(rawIndice);
-
-    return {
-      ...modulo,
-      indice: Number.isFinite(parsedIndice) ? parsedIndice : 0
-    };
-  }
-
-  private getCurrentDateTime(): string {
-    return new Intl.DateTimeFormat('es-CO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(new Date());
   }
 }

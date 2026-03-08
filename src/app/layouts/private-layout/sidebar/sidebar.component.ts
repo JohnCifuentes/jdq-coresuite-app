@@ -1,6 +1,9 @@
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthRoutingModule } from "../../../features/auth/auth-routing.module";
+import { LoginService } from '../../../services/seguridad/login.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-sidebar',
@@ -14,7 +17,11 @@ export class SidebarComponent implements OnInit {
   userRole = 'Usuario';
   userInitials = 'US';
 
-  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
+    private router: Router,
+    private loginService: LoginService
+  ) {}
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) {
@@ -29,7 +36,7 @@ export class SidebarComponent implements OnInit {
 
     try {
       const user = JSON.parse(rawUser);
-      const nameParts = [user.nombre1, user.nombre2, user.apellido1, user.apellido2]
+      const nameParts = [user.nombre1, user.apellido1]
         .filter((part: string) => !!part)
         .map((part: string) => part.trim());
 
@@ -42,6 +49,33 @@ export class SidebarComponent implements OnInit {
       this.userName = 'Usuario';
       this.userInitials = 'US';
     }
+  }
+
+  logout(): void {
+    Swal.fire({
+      icon: 'question',
+      title: '¿Cerrar sesión?',
+      text: '¿Está seguro de que desea cerrar sesión?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        if (isPlatformBrowser(this.platformId)) {
+          this.loginService.clearToken();
+          localStorage.removeItem('auth_user');
+        }
+
+        this.router.navigate(['/login']).then(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Sesión cerrada',
+            text: 'Has cerrado sesión correctamente.',
+            confirmButtonText: 'Aceptar'
+          });
+        });
+      }
+    });
   }
 
   private buildInitials(fullName: string): string {
