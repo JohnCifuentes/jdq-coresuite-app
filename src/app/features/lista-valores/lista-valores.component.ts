@@ -1,5 +1,5 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import {
@@ -27,8 +27,7 @@ export class ListaValoresComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private listaValoresService: ListaValoresService,
-    @Inject(PLATFORM_ID) private platformId: object
+    private listaValoresService: ListaValoresService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -37,10 +36,6 @@ export class ListaValoresComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
       this.errorMessage = 'No se encontró información del usuario logueado.';

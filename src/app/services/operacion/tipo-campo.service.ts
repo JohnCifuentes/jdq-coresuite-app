@@ -2,8 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
 import {
   CreateTipoCampoDTO,
   UpdateTipoCampoDTO,
@@ -19,15 +17,10 @@ export class TipoCampoService {
   private storageKey = 'auth_token';
 
   constructor(
-    private http: HttpClient,
-    @Inject(PLATFORM_ID) private platformId: object
+    private http: HttpClient
   ) {}
 
   private getAuthOptions() {
-    if (!isPlatformBrowser(this.platformId)) {
-      return {};
-    }
-
     const token = localStorage.getItem(this.storageKey);
     if (!token) {
       return {};

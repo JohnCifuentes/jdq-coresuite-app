@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://localhost:8080'
+  apiBaseUrl: 'https://jdqcoresuite-api-yswbmmsftq-uc.a.run.app'
 };
