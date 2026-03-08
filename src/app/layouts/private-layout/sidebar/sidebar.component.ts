@@ -1,5 +1,4 @@
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthRoutingModule } from "../../../features/auth/auth-routing.module";
 import { LoginService } from '../../../services/seguridad/login.service';
@@ -18,16 +17,11 @@ export class SidebarComponent implements OnInit {
   userInitials = 'US';
 
   constructor(
-    @Inject(PLATFORM_ID) private platformId: object,
     private router: Router,
     private loginService: LoginService
   ) {}
 
   ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
     const rawUser = localStorage.getItem('auth_user');
 
     if (!rawUser) {
@@ -61,10 +55,8 @@ export class SidebarComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        if (isPlatformBrowser(this.platformId)) {
-          this.loginService.clearToken();
-          localStorage.removeItem('auth_user');
-        }
+        this.loginService.clearToken();
+        localStorage.removeItem('auth_user');
 
         this.router.navigate(['/login']).then(() => {
           Swal.fire({

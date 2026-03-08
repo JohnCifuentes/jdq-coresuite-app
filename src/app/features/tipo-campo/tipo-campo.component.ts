@@ -1,5 +1,5 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import {
@@ -26,8 +26,7 @@ export class TipoCampoComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private tipoCampoService: TipoCampoService,
-    @Inject(PLATFORM_ID) private platformId: object
+    private tipoCampoService: TipoCampoService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -36,10 +35,6 @@ export class TipoCampoComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
     const rawUser = localStorage.getItem('auth_user');
 
     if (rawUser) {

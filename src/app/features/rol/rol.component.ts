@@ -1,5 +1,5 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateRolDTO, InactiveRolDTO, ResponseRolDTO, UpdateRolDTO } from '../../models/seguridad/rol.models';
 import { RolService } from '../../services/seguridad/rol.service';
@@ -23,8 +23,7 @@ export class RolComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private rolService: RolService,
-    @Inject(PLATFORM_ID) private platformId: object
+    private rolService: RolService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -33,10 +32,6 @@ export class RolComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
       this.errorMessage = 'No se encontró información del usuario logueado.';

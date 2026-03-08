@@ -1,5 +1,5 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import {
@@ -34,8 +34,7 @@ export class UserComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private usuarioService: UsuarioService,
-    private tipoIdentificacionService: TipoIdentificacionService,
-    @Inject(PLATFORM_ID) private platformId: object
+    private tipoIdentificacionService: TipoIdentificacionService
   ) {
     this.form = this.fb.group({
       tipoIdentificacionId: [null, Validators.required],
@@ -51,10 +50,6 @@ export class UserComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTiposIdentificacion();
-
-    if (!isPlatformBrowser(this.platformId)) {
-      return;
-    }
 
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
