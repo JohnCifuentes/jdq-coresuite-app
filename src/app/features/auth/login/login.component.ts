@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router'
 import { AuthRoutingModule } from "../auth-routing.module";
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LoginService } from '../../../services/seguridad/login.service';
 import { UsuarioService } from '../../../services/seguridad/usuario.service';
 import { UsuarioCredencialesDTO } from '../../../models/seguridad/usuario.models';
@@ -13,7 +13,8 @@ import Swal from 'sweetalert2';
   imports: [
     CommonModule,
     AuthRoutingModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    FormsModule
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
@@ -25,6 +26,21 @@ export class LoginComponent {
   errorMessage: string | null = null;
   failedAttempts = 0;
   userBlocked = false;
+  showPassword = false;
+  showPolicyModal = false;
+  aceptaTerminos = false;
+
+  togglePassword(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  openPolicyModal(): void {
+    this.showPolicyModal = true;
+  }
+
+  closePolicyModal(): void {
+    this.showPolicyModal = false;
+  }
 
   constructor(
     private router: Router,
