@@ -6,16 +6,7 @@
       <p class="text-muted mb-0">Cree y administre listas de valores por empresa.</p>
     </div>
 
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
-        Cancelar
-      </button>
-      <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="submitListaValores()"
-        [disabled]="form.invalid || saving">
-        <span class="material-symbols-outlined small">save</span>
-        {{ isEditMode ? 'Actualizar' : 'Crear' }}
-      </button>
-    </div>
+
   </div>
 
   <div class="card shadow-sm border-0 mb-4">
@@ -34,11 +25,57 @@
               placeholder="Breve descripción de la lista de valores">
           </div>
 
-          <div class="col-12 border-top pt-3">
-            <small class="text-muted">Usuario creación: {{ loggedUserName }}</small>
-          </div>
+          <div class="row g-3">
 
+            <div class="col-6 col-md-4 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Estado</small>
+                <div class="audit-value text-success">Activo</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Usuario creación</small>
+                <div class="audit-value">{{ loggedUserName }}</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-4 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Fecha creación</small>
+                <div class="audit-value">2023-10-24 08:30</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Usuario actualización</small>
+                <div class="audit-value">-</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-6 col-lg">
+              <div class="audit-item">
+                <small class="audit-label">Fecha actualización</small>
+                <div class="audit-value">-</div>
+              </div>
+            </div>
+
+          </div>
         </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="submitListaValores()"
+            [disabled]="form.invalid || saving">
+            <span class="material-symbols-outlined small">save</span>
+            {{ isEditMode ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+
       </form>
     </div>
   </div>
@@ -73,7 +110,8 @@
           </tr>
 
           <tr *ngIf="!loading && !errorMessage && listaValores.length === 0">
-            <td colspan="5" class="text-center py-4 text-muted">No hay listas de valores registradas para la empresa.</td>
+            <td colspan="5" class="text-center py-4 text-muted">No hay listas de valores registradas para la empresa.
+            </td>
           </tr>
 
           <tr *ngFor="let item of listaValores">
@@ -90,7 +128,8 @@
               <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editListaValores(item)">
                 <span class="material-symbols-outlined">edit</span>
               </button>
-              <button type="button" class="btn btn-sm btn-icon text-danger" > <!-- (click)="confirmDeleteListaValores(item)"> -->
+              <button type="button" class="btn btn-sm btn-icon text-danger">
+                <!-- (click)="confirmDeleteListaValores(item)"> -->
                 <span class="material-symbols-outlined">delete</span>
               </button>
             </td>
