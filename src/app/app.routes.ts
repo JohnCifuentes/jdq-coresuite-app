@@ -43,10 +43,7 @@ export const routes: Routes = [
     component: PrivateLayoutComponent,
     children: [
       {
-        path: '',
-        canActivate: [roleGuard],
-        component: AdminEmpresaHomeComponent,
-        pathMatch: 'full'
+        path: '', canActivate: [roleGuard], component: AdminEmpresaHomeComponent, pathMatch: 'full'
       },
       { path: 'super-admin-home', component: SuperAdminHomeComponent },
       { path: 'admin-empresa-home', component: AdminEmpresaHomeComponent },
