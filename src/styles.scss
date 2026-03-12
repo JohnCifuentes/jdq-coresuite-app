@@ -15,3 +15,75 @@ body {
 a[routerLink] {
   cursor: pointer;
 }
+
+.management-page {
+  background-color: #f5f7f8;
+}
+
+.management-page .card {
+  background-color: #ffffff;
+}
+
+.management-page .card-body {
+  background-color: #ffffff;
+}
+
+.management-page .section-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #212529;
+}
+
+.management-page .audit-box {
+  background-color: #eef2f6 !important;
+}
+
+.management-page .audit-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.management-page .audit-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.management-page .audit-value {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #212529;
+}
+
+.management-page .search-box {
+  width: 250px;
+}
+
+.management-page .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #adb5bd;
+}
+
+.management-page .btn-icon {
+  padding: 4px 6px;
+}
+
+.management-page .table-light,
+.management-page .table-light th {
+  background-color: #eef2f6;
+  color: #495057;
+}
+
+.management-page .card-footer {
+  background-color: #ffffff;
+  border-top: 1px solid #eef2f6;
+}

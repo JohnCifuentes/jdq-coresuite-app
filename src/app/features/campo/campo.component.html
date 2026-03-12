@@ -1,0 +1,161 @@
+<div class="container-fluid management-page py-4">
+  <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Gestion de Campos</h2>
+      <p class="text-muted mb-0">Administre la definicion de campos para las interfaces del sistema.</p>
+    </div>
+  </div>
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-3">
+        <span class="material-symbols-outlined text-primary">edit_square</span>
+        <h5 class="mb-0 section-title">Campos</h5>
+      </div>
+      <form [formGroup]="form">
+        <div class="row g-4">
+          <div class="col-12 col-md-3">
+            <label class="form-label">Interfaz</label>
+            <select class="form-select" formControlName="interfazId">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let item of interfaces" [ngValue]="item.id">{{ item.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Grupo de campos</label>
+            <select class="form-select" formControlName="interfaceGrupoCamposId">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let item of gruposCampos" [ngValue]="item.id">{{ item.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Tipo de campo</label>
+            <select class="form-select" formControlName="tipoCampoId">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let item of tiposCampo" [ngValue]="item.id">{{ item.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Lista de valores</label>
+            <select class="form-select" formControlName="listaValoresId">
+              <option [ngValue]="null" disabled>Seleccione...</option>
+              <option *ngFor="let item of listasValores" [ngValue]="item.id">{{ item.nombre }}</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: identificacion">
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Etiqueta</label>
+            <input type="text" class="form-control" formControlName="etiqueta" placeholder="Numero de ID">
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Indice</label>
+            <input type="number" class="form-control" formControlName="indice" min="0">
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Columnas</label>
+            <input type="number" class="form-control" formControlName="columnas" min="1">
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Descripcion</label>
+            <input type="text" class="form-control" formControlName="descripcion" placeholder="Descripcion del campo">
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Valor por defecto</label>
+            <input type="text" class="form-control" formControlName="valorDefecto" placeholder="Valor inicial">
+          </div>
+          <div class="col-12">
+            <!-- AUDIT -->
+            <div class="col-12 audit-box mt-4 p-3 rounded">
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="material-symbols-outlined text-muted small">info</span>
+                <span class="audit-title">Auditoría</span>
+              </div>
+              <div class="row g-3">
+                <div class="col-6 col-md">
+                  <small class="audit-label">Estado</small>
+                  <div>
+                    <span class="badge bg-success-subtle text-success">Activo</span>
+                  </div>
+                </div>
+                <div class="col-6 col-md">
+                  <small class="audit-label">Usuario Creación</small>
+                  <div class="audit-value">{{ loggedUserName }}</div>
+                </div>
+                <div class="col-6 col-md">
+                  <small class="audit-label">Fecha Creación</small>
+                  <div class="audit-value">12/03/2024 08:30 AM</div>
+                </div>
+                <div class="col-6 col-md">
+                  <small class="audit-label">Usuario Actualización</small>
+                  <div class="audit-value">-</div>
+                </div>
+                <div class="col-6 col-md">
+                  <small class="audit-label">Fecha Actualización</small>
+                  <div class="audit-value">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-3 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="submitCampo()"
+            [disabled]="form.invalid || saving">
+            {{ isEditMode ? 'Actualizar' : 'Crear' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="card shadow-sm border-0">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="text-center align-middle">Nombre</th>
+            <th class="text-center align-middle">Etiqueta</th>
+            <th class="text-center align-middle">Interfaz</th>
+            <th class="text-center align-middle">Tipo</th>
+            <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="6" class="text-center py-4 text-muted">Cargando campos...</td>
+          </tr>
+          <tr *ngIf="!loading && errorMessage">
+            <td colspan="6" class="text-center py-4 text-danger">{{ errorMessage }}</td>
+          </tr>
+          <tr *ngIf="!loading && !errorMessage && campos.length === 0">
+            <td colspan="6" class="text-center py-4 text-muted">No hay campos registrados.</td>
+          </tr>
+          <tr *ngFor="let item of campos">
+            <td class="fw-semibold">{{ item.nombre }}</td>
+            <td>{{ item.etiqueta }}</td>
+            <td>{{ item.interfaz?.nombre }}</td>
+            <td>{{ item.tipoCampo?.nombre }}</td>
+            <td>
+              <span class="badge"
+                [ngClass]="isActivo(item.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                {{ isActivo(item.estado) ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editCampo(item)">
+                <span class="material-symbols-outlined">edit</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <small class="text-muted">Mostrando {{ campos.length }} campos registrados</small>
+    </div>
+  </div>
+</div>

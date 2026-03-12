@@ -2,15 +2,15 @@
 
   <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
     <div>
-      <h2 class="fw-bold mb-1">Gestión de Tipo de Campo</h2>
-      <p class="text-muted mb-0">Administre la configuración de tipos de campo del sistema.</p>
+      <h2 class="fw-bold mb-1">Gestion de Tipo de Validacion</h2>
+      <p class="text-muted mb-0">Administre la configuracion de tipos de validacion del sistema.</p>
     </div>
 
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
         Cancelar
       </button>
-      <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="submitTipoCampo()"
+      <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="submitTipoValidacion()"
         [disabled]="form.invalid || saving">
         {{ isEditMode ? 'Actualizar' : 'Crear' }}
       </button>
@@ -24,17 +24,17 @@
 
           <div class="col-12 col-md-6">
             <label class="form-label">Nombre</label>
-            <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: Texto">
+            <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: Requerido">
           </div>
 
           <div class="col-12 col-md-6">
-            <label class="form-label">Descripción</label>
+            <label class="form-label">Descripcion</label>
             <input type="text" class="form-control" formControlName="descripcion"
-              placeholder="Breve descripción del tipo de campo">
+              placeholder="Breve descripcion del tipo de validacion">
           </div>
 
           <div class="col-12 border-top pt-3">
-            <small class="text-muted">Usuario creación: {{ loggedUserName }}</small>
+            <small class="text-muted">Usuario creacion: {{ loggedUserName }}</small>
           </div>
 
         </div>
@@ -43,40 +43,33 @@
   </div>
 
   <div class="card shadow-sm border-0">
-    <div class="card-body border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
-      <div class="position-relative search-box">
-        <span class="material-symbols-outlined search-icon">search</span>
-        <input type="text" class="form-control form-control-sm ps-5" placeholder="Buscar tipo de campo...">
-      </div>
-    </div>
-
     <div class="table-responsive">
       <table class="table align-middle mb-0">
-        <thead class="table-light text-uppercase small">
+        <thead class="table-light">
           <tr>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Estado</th>
-            <th>Fecha Registro</th>
-            <th class="text-end">Acciones</th>
+            <th class="text-center align-middle">Nombre</th>
+            <th class="text-center align-middle">Descripcion</th>
+            <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Fecha Registro</th>
+            <th class="text-center align-middle">Acciones</th>
           </tr>
         </thead>
 
         <tbody>
           <tr *ngIf="loading">
-            <td colspan="5" class="text-center py-4 text-muted">Cargando tipos de campo...</td>
+            <td colspan="5" class="text-center py-4 text-muted">Cargando tipos de validacion...</td>
           </tr>
 
           <tr *ngIf="!loading && errorMessage">
             <td colspan="5" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
 
-          <tr *ngIf="!loading && !errorMessage && tipoCampos.length === 0">
-            <td colspan="5" class="text-center py-4 text-muted">No hay tipos de campo registrados.</td>
+          <tr *ngIf="!loading && !errorMessage && tipoValidaciones.length === 0">
+            <td colspan="5" class="text-center py-4 text-muted">No hay tipos de validacion registrados.</td>
           </tr>
 
-          <tr *ngFor="let item of tipoCampos">
-            <td class="fw-bold">{{ item.nombre }}</td>
+          <tr *ngFor="let item of tipoValidaciones">
+            <td class="fw-semibold">{{ item.nombre }}</td>
             <td>{{ item.descripcion }}</td>
             <td>
               <span class="badge"
@@ -85,12 +78,9 @@
               </span>
             </td>
             <td>{{ item.fechaCreacion }}</td>
-            <td class="text-end">
-              <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editTipoCampo(item)">
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editTipoValidacion(item)">
                 <span class="material-symbols-outlined">edit</span>
-              </button>
-              <button type="button" class="btn btn-sm btn-icon text-danger" (click)="confirmDeleteTipoCampo(item)">
-                <span class="material-symbols-outlined">delete</span>
               </button>
             </td>
           </tr>
@@ -99,7 +89,7 @@
     </div>
 
     <div class="card-footer d-flex justify-content-between align-items-center">
-      <small class="text-muted">Mostrando {{ tipoCampos.length }} tipos de campo registrados</small>
+      <small class="text-muted">Mostrando {{ tipoValidaciones.length }} tipos de validacion registrados</small>
     </div>
   </div>
 

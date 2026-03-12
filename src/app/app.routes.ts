@@ -21,6 +21,10 @@ import { InterfacesComponent } from './features/interfaces/interfaces.component'
 import { ListaValoresComponent } from './features/lista-valores/lista-valores.component';
 import { ListaValoresDetalleComponent } from './features/lista-valores-detalle/lista-valores-detalle.component';
 import { TipoCampoComponent } from './features/tipo-campo/tipo-campo.component';
+import { TipoValidacionComponent } from './features/tipo-validacion/tipo-validacion.component';
+import { InterfaceGrupoCamposComponent } from './features/interface-grupo-campos/interface-grupo-campos.component';
+import { CampoComponent } from './features/campo/campo.component';
+import { CampoValidacionComponent } from './features/campo-validacion/campo-validacion.component';
 
 export const routes: Routes = [
   {
@@ -54,7 +58,11 @@ export const routes: Routes = [
       { path: 'interface', component: InterfacesComponent },
       { path: 'lista-valores', component: ListaValoresComponent },
       { path: 'lista-valores-detalle', component: ListaValoresDetalleComponent },
-      { path: 'tipo-campo', component: TipoCampoComponent }
+      { path: 'tipo-campo', component: TipoCampoComponent },
+      { path: 'tipo-validacion', component: TipoValidacionComponent },
+      { path: 'interface-grupo-campos', component: InterfaceGrupoCamposComponent },
+      { path: 'campo', component: CampoComponent },
+      { path: 'campo-validacion', component: CampoValidacionComponent }
     ]
   }
 ];

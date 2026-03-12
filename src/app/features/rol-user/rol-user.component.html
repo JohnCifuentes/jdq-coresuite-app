@@ -1,5 +1,4 @@
-<div class="container-fluid rol-usuario-container py-4">
-
+<div class="container-fluid rol-usuario-container management-page py-4">
   <!-- HEADER -->
   <div class="mb-4">
     <h2 class="fw-bold mb-1">Gestión de Asignación Rol/Usuario</h2>
@@ -7,31 +6,24 @@
       Administre los privilegios de acceso para los usuarios del sistema.
     </p>
   </div>
-
   <!-- ======================================
-        SECCIÓN SUPERIOR
+  SECCIÓN SUPERIOR
   ======================================= -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-
       <!-- BUSCAR USUARIO -->
       <div class="mb-4">
         <label class="form-label fw-medium">Buscar Usuario</label>
         <div class="position-relative">
           <span class="material-symbols-outlined search-icon">search</span>
-          <input type="text"
-                 class="form-control ps-5"
-                 placeholder="Ingrese nombre, ID o correo electrónico del usuario..."
-                 [(ngModel)]="searchQuery"
-                 (input)="onSearchUsuario(searchQuery)">
+          <input type="text" class="form-control ps-5"
+            placeholder="Ingrese nombre, ID o correo electrónico del usuario..." [(ngModel)]="searchQuery"
+            (input)="onSearchUsuario(searchQuery)">
         </div>
-
         <!-- Dropdown de usuarios filtrados -->
         <div class="list-group mt-2" *ngIf="usuariosFiltrados.length > 0">
-          <button type="button" 
-                  class="list-group-item list-group-item-action"
-                  *ngFor="let usuario of usuariosFiltrados"
-                  (click)="selectUsuario(usuario)">
+          <button type="button" class="list-group-item list-group-item-action" *ngFor="let usuario of usuariosFiltrados"
+            (click)="selectUsuario(usuario)">
             <div class="d-flex align-items-center gap-3">
               <div class="avatar bg-primary-subtle text-primary" style="width: 32px; height: 32px;">
                 {{ getIniciales(usuario) }}
@@ -44,17 +36,15 @@
           </button>
         </div>
       </div>
-
       <div class="row g-4">
-
         <!-- INFO USUARIO SELECCIONADO -->
         <div class="col-12 col-lg-6">
-          <div class="user-card d-flex align-items-center gap-4 p-3 rounded" *ngIf="selectedUsuarioId; else noUserSelected">
+          <div class="user-card d-flex align-items-center gap-4 p-3 rounded"
+            *ngIf="selectedUsuarioId; else noUserSelected">
             <div class="avatar bg-primary-subtle text-primary d-flex justify-content-center align-items-center"
-                 style="width: 50px; height: 50px; font-size: 20px; font-weight: bold;">
+              style="width: 50px; height: 50px; font-size: 20px; font-weight: bold;">
               {{ getIniciales(usuarioSeleccionado!) }}
             </div>
-
             <div class="flex-grow-1">
               <h5 class="mb-1 text-primary fw-bold">
                 {{ getNombreCompleto(usuarioSeleccionado!) }}
@@ -62,36 +52,28 @@
               <p class="mb-1 text-muted small">
                 {{ usuarioSeleccionado?.correoElectronico }}
               </p>
-
               <div>
                 <span class="badge"
-                      [ngClass]="isActivo(usuarioSeleccionado?.estado!) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                  [ngClass]="isActivo(usuarioSeleccionado?.estado!) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
                   {{ isActivo(usuarioSeleccionado?.estado!) ? 'Activo' : 'Inactivo' }}
                 </span>
               </div>
             </div>
           </div>
-
           <ng-template #noUserSelected>
             <div class="alert alert-info" role="alert">
               Seleccione un usuario para asignar roles.
             </div>
           </ng-template>
         </div>
-
         <!-- SELECCIÓN DE ROLES -->
         <div class="col-12 col-lg-6">
           <label class="form-label fw-medium">Selección de Roles</label>
-
           <div class="row g-2">
             <div class="col-6" *ngFor="let rol of rolesDisponibles">
               <div class="form-check role-check">
-                <input class="form-check-input" 
-                       type="checkbox"
-                       [id]="'rol-' + rol.id"
-                       [checked]="isRolChecked(rol.id)"
-                       (change)="toggleRol(rol.id)"
-                       [disabled]="!selectedUsuarioId">
+                <input class="form-check-input" type="checkbox" [id]="'rol-' + rol.id" [checked]="isRolChecked(rol.id)"
+                  (change)="toggleRol(rol.id)" [disabled]="!selectedUsuarioId">
                 <label class="form-check-label" [for]="'rol-' + rol.id">
                   {{ rol.nombre }}
                 </label>
@@ -99,95 +81,88 @@
             </div>
           </div>
         </div>
-
       </div>
-
       <!-- AUDIT -->
-      <div class="border-top mt-4 pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-
-        <div class="d-flex gap-4 text-muted small">
-
-          <div class="d-flex align-items-center gap-1">
-            <span class="material-symbols-outlined small">history_edu</span>
-            <span>Usuario Creación: {{ loggedUserName }}</span>
-          </div>
-
-          <div class="d-flex align-items-center gap-1">
-            <span class="material-symbols-outlined small">update</span>
-            <span>Usuario Actualización: {{ usuarioActualizacion }}</span>
-          </div>
-
-          <div class="d-flex align-items-center gap-1">
-            <span class="material-symbols-outlined small">schedule</span>
-            <span>{{ fechaActualizacion }}</span>
-          </div>
-
+      <div class="audit-box mt-4 p-3 rounded">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="material-symbols-outlined text-muted small">info</span>
+          <span class="audit-title">Auditoría</span>
         </div>
-
-        <div class="d-flex gap-3">
-          <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
-            Cancelar
-          </button>
-          <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="guardarAsignacion()" [disabled]="!selectedUsuarioId || selectedRolIds.size === 0 || saving">
-            <span class="material-symbols-outlined small">save</span>
-            Guardar Asignación
-          </button>
+        <div class="row g-3">
+          <div class="col-6 col-md">
+            <small class="audit-label">Estado</small>
+            <div>
+              <span class="badge bg-success-subtle text-success">Activo</span>
+            </div>
+          </div>
+          <div class="col-6 col-md">
+            <small class="audit-label">Usuario Creación</small>
+            <div class="audit-value">{{ loggedUserName }}</div>
+          </div>
+          <div class="col-6 col-md">
+            <small class="audit-label">Fecha Creación</small>
+            <div class="audit-value">12/03/2024 08:30 AM</div>
+          </div>
+          <div class="col-6 col-md">
+            <small class="audit-label">Usuario Actualización</small>
+            <div class="audit-value">-</div>
+          </div>
+          <div class="col-6 col-md">
+            <small class="audit-label">Fecha Actualización</small>
+            <div class="audit-value">-</div>
+          </div>
         </div>
-
       </div>
-
+      <div class="d-flex justify-content-end gap-3 mt-4">
+        <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="guardarAsignacion()"
+          [disabled]="!selectedUsuarioId || selectedRolIds.size === 0 || saving">
+          Guardar Asignación
+        </button>
+      </div>
     </div>
   </div>
-
-
   <!-- ======================================
-        ASIGNACIONES ACTUALES
+  ASIGNACIONES ACTUALES
   ======================================= -->
   <div class="card shadow-sm border-0">
-
+    <!--
     <div class="card-body border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
       <h5 class="mb-0 fw-bold">Asignaciones Actuales</h5>
-
       <div class="position-relative search-box">
         <span class="material-symbols-outlined search-icon small">filter_list</span>
-        <input type="text"
-               class="form-control form-control-sm ps-5"
-               placeholder="Filtrar tabla...">
+        <input type="text" class="form-control form-control-sm ps-5" placeholder="Filtrar tabla...">
       </div>
     </div>
-
+    -->
     <div class="table-responsive">
       <table class="table align-middle mb-0">
-
         <thead class="table-light">
           <tr>
-            <th>Usuario</th>
-            <th>Rol Asignado</th>
-            <th>Fecha Asignación</th>
-            <th>Estado</th>
-            <th class="text-end">Acciones</th>
+            <th class="text-center align-middle">Usuario</th>
+            <th class="text-center align-middle">Rol Asignado</th>
+            <th class="text-center align-middle">Fecha Asignación</th>
+            <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Acciones</th>
           </tr>
         </thead>
-
         <tbody>
-
           <tr *ngIf="loading">
             <td colspan="5" class="text-center py-4 text-muted">Cargando asignaciones...</td>
           </tr>
-
           <tr *ngIf="!loading && errorMessage">
             <td colspan="5" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
-
           <tr *ngIf="!loading && !errorMessage && asignacionesActuales.length === 0">
             <td colspan="5" class="text-center py-4 text-muted">No hay asignaciones registradas para la empresa.</td>
           </tr>
-
           <tr *ngFor="let asignacion of asignacionesActuales">
             <td>
               <div class="d-flex align-items-center gap-3">
                 <div class="avatar bg-primary-subtle text-primary d-flex justify-content-center align-items-center"
-                     style="width: 32px; height: 32px;">
+                  style="width: 32px; height: 32px;">
                   {{ asignacion.usuario.nombre1.charAt(0) }}{{ asignacion.usuario.apellido1.charAt(0) }}
                 </div>
                 <div>
@@ -201,30 +176,27 @@
             <td>{{ asignacion.fechaCreacion }}</td>
             <td>
               <span class="badge"
-                    [ngClass]="isActivo(asignacion.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                [ngClass]="isActivo(asignacion.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
                 {{ isActivo(asignacion.estado) ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
             <td class="text-end">
               <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editarAsignacion(asignacion)">
-                <span class="material-symbols-outlined">edit_note</span>
+                <span class="material-symbols-outlined">edit</span>
               </button>
-              <button type="button" class="btn btn-sm btn-icon text-danger" (click)="confirmarEliminarAsignacion(asignacion)">
+              <button type="button" class="btn btn-sm btn-icon text-danger"
+                (click)="confirmarEliminarAsignacion(asignacion)">
                 <span class="material-symbols-outlined">delete_forever</span>
               </button>
             </td>
           </tr>
-
         </tbody>
       </table>
     </div>
-
     <div class="card-footer d-flex justify-content-between align-items-center">
       <small class="text-muted fst-italic">
         Mostrando {{ asignacionesActuales.length }} asignaciones registradas
       </small>
     </div>
-
   </div>
-
 </div>

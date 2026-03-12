@@ -1,41 +1,117 @@
 <aside class="h-100 d-flex flex-column bg-white border-end">
     <!-- Navigation -->
-    <nav class="flex-grow-1 px-3">
+    <nav class="flex-grow-1 px-3 overflow-auto">
         <ul class="nav nav-pills flex-column gap-2">
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/rol" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Roles</span>
-                </a>
+            <li class="nav-item mt-2">
+                <button class="nav-link w-100 d-flex align-items-center justify-content-between" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#seguridadMenu" aria-expanded="true"
+                    aria-controls="seguridadMenu">
+                    <span class="text-uppercase small text-muted fw-semibold">Seguridad</span>
+                    <i class="bi bi-chevron-down small text-muted"></i>
+                </button>
+                <div id="seguridadMenu" class="collapse show mt-1">
+                    <ul class="nav nav-pills flex-column gap-2 ms-2">
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/user"
+                                routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Usuarios</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/rol"
+                                routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Roles</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/rol-user"
+                                routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Rol / Usuario</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/user" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Usuarios</span>
-                </a>
+
+            <li class="nav-item mt-3">
+                <button class="nav-link w-100 d-flex align-items-center justify-content-between" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#configuracionMenu" aria-expanded="true"
+                    aria-controls="configuracionMenu">
+                    <span class="text-uppercase small text-muted fw-semibold">Configuración</span>
+                    <i class="bi bi-chevron-down small text-muted"></i>
+                </button>
+                <div id="configuracionMenu" class="collapse show mt-1">
+                    <ul class="nav nav-pills flex-column gap-2 ms-2">
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/module"
+                                routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Módulos</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/lista-valores"
+                                routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Lista de valores</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href=""
+                                routerLink="/app/lista-valores-detalle" routerLinkActive="active"
+                                [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Lista valores detalle</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/rol-user" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Rol/Usuario</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/module" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Módulos</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/lista-valores" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Lista de Valores</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/lista-valores-detalle" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Lista Valores Detalle</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/interface" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-                    <span>Interfaces</span>
-                </a>
+
+            <li class="nav-item mt-3">
+                <button class="nav-link w-100 d-flex align-items-center justify-content-between" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#interfacesMenu" aria-expanded="true"
+                    aria-controls="interfacesMenu">
+                    <span class="text-uppercase small text-muted fw-semibold">Interfaces</span>
+                    <i class="bi bi-chevron-down small text-muted"></i>
+                </button>
+                <div id="interfacesMenu" class="collapse show mt-1">
+                    <ul class="nav nav-pills flex-column gap-2 ms-2">
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href="" routerLink="/app/interface"
+                                routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Interfaces</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href=""
+                                routerLink="/app/interface-grupo-campos" routerLinkActive="active"
+                                [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Grupos de campos</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href=""
+                                routerLink="/app/campo" routerLinkActive="active"
+                                [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Campos</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href=""
+                                routerLink="/app/campo-validacion" routerLinkActive="active"
+                                [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Campos validacion</span>
+                            </a>
+                        </li>
+                        <!--
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-2" href=""
+                                routerLink="/app/tipo-validacion" routerLinkActive="active"
+                                [routerLinkActiveOptions]="{ exact: true }">
+                                <span>Tipos validacion</span>
+                            </a>
+                        </li>
+                        -->
+                    </ul>
+                </div>
             </li>
             <!--
             <li class="nav-item">
@@ -57,7 +133,7 @@
         </ul>
     </nav>
     <!-- User Section -->
-    <div class="p-3 border-top">
+    <div class="p-3 border-top flex-shrink-0 bg-white">
         <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
             <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center flex-shrink-0"
                 style="width:44px;height:44px;min-width:44px;">
@@ -68,7 +144,9 @@
                 <div class="text-muted small text-truncate">{{ userRole }}</div>
             </div>
         </div>
-        <button type="button" class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2" (click)="logout()">
+        <button type="button"
+            class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
+            (click)="logout()">
             <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
             <span>Cerrar sesión</span>
         </button>

@@ -3,41 +3,34 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import {
-  CreateInterfazDTO,
-  Modulo,
-  ResponseInterfazDTO,
-  UpdateInterfazDTO
-} from '../../models/operacion/interfaz.models';
-import { InterfazService } from '../../services/operacion/interfaz.service';
-import { ModuloService } from '../../services/operacion/modulo.service';
+  CreateTipoValidacionDTO,
+  ResponseTipoValidacionDTO,
+  UpdateTipoValidacionDTO
+} from '../../models/operacion/tipo-validacion.models';
+import { TipoValidacionService } from '../../services/operacion/tipo-validacion.service';
 
 @Component({
-  selector: 'app-interfaces',
+  selector: 'app-tipo-validacion',
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './interfaces.component.html',
-  styleUrl: './interfaces.component.scss'
+  templateUrl: './tipo-validacion.component.html',
+  styleUrl: './tipo-validacion.component.scss'
 })
-export class InterfacesComponent implements OnInit {
-  interfaces: ResponseInterfazDTO[] = [];
-  modulos: Modulo[] = [];
+export class TipoValidacionComponent implements OnInit {
+  tipoValidaciones: ResponseTipoValidacionDTO[] = [];
   form: FormGroup;
   loading = false;
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
-  empresaId: number | null = null;
-  selectedInterfazId: number | null = null;
+  selectedTipoValidacionId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
-    private interfazService: InterfazService,
-    private moduloService: ModuloService
+    private tipoValidacionService: TipoValidacionService
   ) {
     this.form = this.fb.group({
-      moduloId: [null, Validators.required],
       nombre: ['', Validators.required],
-      descripcion: ['', Validators.required],
-      indice: [0, [Validators.required, Validators.min(0)]]
+      descripcion: ['', Validators.required]
     });
   }
 
@@ -56,22 +49,19 @@ export class InterfacesComponent implements OnInit {
         } else if (user?.correoElectronico) {
           this.loggedUserName = user.correoElectronico;
         }
-
-        this.empresaId = user?.empresa?.id ?? null;
       } catch {
         this.loggedUserName = '-';
       }
     }
 
-    this.loadModulos();
-    this.loadInterfaces();
+    this.loadTipoValidaciones();
   }
 
   get isEditMode(): boolean {
-    return this.selectedInterfazId !== null;
+    return this.selectedTipoValidacionId !== null;
   }
 
-  submitInterfaz(): void {
+  submitTipoValidacion(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -80,18 +70,16 @@ export class InterfacesComponent implements OnInit {
     this.saving = true;
 
     if (this.isEditMode) {
-      this.updateInterfaz();
+      this.updateTipoValidacion();
       return;
     }
 
-    const payload: CreateInterfazDTO = {
-      moduloId: Number(this.form.get('moduloId')?.value),
+    const payload: CreateTipoValidacionDTO = {
       nombre: this.form.get('nombre')?.value?.trim(),
-      descripcion: this.form.get('descripcion')?.value?.trim(),
-      indice: Number(this.form.get('indice')?.value)
+      descripcion: this.form.get('descripcion')?.value?.trim()
     };
 
-    this.interfazService.createInterfaz(payload).subscribe({
+    this.tipoValidacionService.createTipoValidacion(payload).subscribe({
       next: (response) => {
         this.saving = false;
 
@@ -99,17 +87,17 @@ export class InterfacesComponent implements OnInit {
           Swal.fire({
             icon: 'success',
             title: 'Operacion exitosa',
-            text: 'La interfaz fue creada correctamente.',
+            text: 'El tipo de validacion fue creado correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
           this.resetForm();
-          this.loadInterfaces();
+          this.loadTipoValidaciones();
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible crear la interfaz.',
+            text: 'No fue posible crear el tipo de validacion.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -119,52 +107,46 @@ export class InterfacesComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible crear la interfaz.',
+          text: 'No fue posible crear el tipo de validacion.',
           confirmButtonText: 'Aceptar'
         });
       }
     });
   }
 
-  editInterfaz(item: ResponseInterfazDTO): void {
-    this.selectedInterfazId = item.id;
+  editTipoValidacion(item: ResponseTipoValidacionDTO): void {
+    this.selectedTipoValidacionId = item.id;
 
     this.form.patchValue({
-      moduloId: item.modulo?.id ?? null,
       nombre: item.nombre,
-      descripcion: item.descripcion,
-      indice: item.indice
+      descripcion: item.descripcion
     });
   }
 
   resetForm(): void {
     this.form.reset({
-      moduloId: null,
       nombre: '',
-      descripcion: '',
-      indice: 0
+      descripcion: ''
     });
-    this.selectedInterfazId = null;
+    this.selectedTipoValidacionId = null;
   }
 
   isActivo(estado: string): boolean {
     return estado?.toUpperCase() === 'ACTIVO' || estado?.toUpperCase() === 'A';
   }
 
-  private updateInterfaz(): void {
-    if (!this.selectedInterfazId) {
+  private updateTipoValidacion(): void {
+    if (!this.selectedTipoValidacionId) {
       this.saving = false;
       return;
     }
 
-    const payload: UpdateInterfazDTO = {
-      moduloId: Number(this.form.get('moduloId')?.value),
+    const payload: UpdateTipoValidacionDTO = {
       nombre: this.form.get('nombre')?.value?.trim(),
-      descripcion: this.form.get('descripcion')?.value?.trim(),
-      indice: Number(this.form.get('indice')?.value)
+      descripcion: this.form.get('descripcion')?.value?.trim()
     };
 
-    this.interfazService.updateInterfaz(this.selectedInterfazId, payload).subscribe({
+    this.tipoValidacionService.updateTipoValidacion(this.selectedTipoValidacionId, payload).subscribe({
       next: (response) => {
         this.saving = false;
 
@@ -172,17 +154,17 @@ export class InterfacesComponent implements OnInit {
           Swal.fire({
             icon: 'success',
             title: 'Operacion exitosa',
-            text: 'La interfaz fue actualizada correctamente.',
+            text: 'El tipo de validacion fue actualizado correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
           this.resetForm();
-          this.loadInterfaces();
+          this.loadTipoValidaciones();
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible actualizar la interfaz.',
+            text: 'No fue posible actualizar el tipo de validacion.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -192,42 +174,26 @@ export class InterfacesComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible actualizar la interfaz.',
+          text: 'No fue posible actualizar el tipo de validacion.',
           confirmButtonText: 'Aceptar'
         });
       }
     });
   }
 
-  private loadInterfaces(): void {
+  private loadTipoValidaciones(): void {
     this.loading = true;
     this.errorMessage = null;
 
-    this.interfazService.getAllInterfaz().subscribe({
+    this.tipoValidacionService.getAllTipoValidaciones().subscribe({
       next: (response) => {
-        this.interfaces = response?.contenido ?? [];
+        this.tipoValidaciones = response?.contenido ?? [];
         this.loading = false;
       },
       error: () => {
         this.loading = false;
-        this.errorMessage = 'No fue posible cargar las interfaces registradas.';
+        this.errorMessage = 'No fue posible cargar los tipos de validacion registrados.';
       }
     });
   }
-
-  private loadModulos(): void {
-    const request$ = this.empresaId
-      ? this.moduloService.getModulosByEmpresa(this.empresaId)
-      : this.moduloService.getAllModulos();
-
-    request$.subscribe({
-      next: (response) => {
-        this.modulos = response?.contenido ?? [];
-      },
-      error: () => {
-        this.modulos = [];
-      }
-    });
-  }
-
 }

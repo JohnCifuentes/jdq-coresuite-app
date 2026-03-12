@@ -1,88 +1,63 @@
-<div class="container-fluid roles-container py-4">
-
+<div class="container-fluid roles-container management-page py-4">
+  <!-- HEADER -->
+  <div class="mb-4">
+    <h2 class="fw-bold mb-1">Gestión de Roles</h2>
+    <p class="text-muted mb-0">
+      Creación, actualización y administración de roles del sistema.
+    </p>
+  </div>
   <!-- =======================
-        CREAR / ACTUALIZAR ROL
+  CREAR / ACTUALIZAR ROL
   ======================== -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-
       <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-3">
         <span class="material-symbols-outlined text-primary">edit_square</span>
-        <h5 class="section-title mb-0">Rol</h5>
+        <h5 class="mb-0 section-title">Rol</h5>
       </div>
-
       <form [formGroup]="form" (ngSubmit)="submitRol()">
-
-        <div class="row g-4">
-
+        <div class="row g-3">
           <div class="col-12 col-md-6 col-lg-4">
             <label class="form-label label-custom">Nombre del rol</label>
-            <input
-              type="text"
-              class="form-control"
-              formControlName="nombre"
-              placeholder="Ej: Administrador Maestro">
+            <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: Administrador Maestro">
           </div>
-
           <div class="col-12 col-md-6 col-lg-8">
             <label class="form-label label-custom">Descripción</label>
-            <input
-              type="text"
-              class="form-control"
-              formControlName="descripcion"
+            <input type="text" class="form-control" formControlName="descripcion"
               placeholder="Defina las responsabilidades de este rol...">
           </div>
-
         </div>
-
-        <!-- AUDIT INFO -->
-        <div class="audit-box mt-4 p-4 rounded">
-
+        <!-- AUDIT -->
+        <div class="audit-box mt-4 p-3 rounded">
           <div class="d-flex align-items-center gap-2 mb-3">
             <span class="material-symbols-outlined text-muted small">info</span>
             <span class="audit-title">Auditoría</span>
           </div>
-
           <div class="row g-3">
-
-            <div class="col-6 col-md-4 col-lg">
-              <div class="audit-item">
-                <small class="audit-label">Estado</small>
-                <div class="audit-value text-success">Activo</div>
+            <div class="col-6 col-md">
+              <small class="audit-label">Estado</small>
+              <div>
+                <span class="badge bg-success-subtle text-success">Activo</span>
               </div>
             </div>
-
-            <div class="col-6 col-md-4 col-lg">
-              <div class="audit-item">
-                <small class="audit-label">Usuario creación</small>
-                <div class="audit-value">{{ loggedUserName }}</div>
-              </div>
+            <div class="col-6 col-md">
+              <small class="audit-label">Usuario Creación</small>
+              <div class="audit-value">{{ loggedUserName }}</div>
             </div>
-
-            <div class="col-6 col-md-4 col-lg">
-              <div class="audit-item">
-                <small class="audit-label">Fecha creación</small>
-                <div class="audit-value">2023-10-24 08:30</div>
-              </div>
+            <div class="col-6 col-md">
+              <small class="audit-label">Fecha Creación</small>
+              <div class="audit-value">12/03/2024 08:30 AM</div>
             </div>
-
-            <div class="col-6 col-md-6 col-lg">
-              <div class="audit-item">
-                <small class="audit-label">Usuario actualización</small>
-                <div class="audit-value">-</div>
-              </div>
+            <div class="col-6 col-md">
+              <small class="audit-label">Usuario Actualización</small>
+              <div class="audit-value">-</div>
             </div>
-
-            <div class="col-6 col-md-6 col-lg">
-              <div class="audit-item">
-                <small class="audit-label">Fecha actualización</small>
-                <div class="audit-value">-</div>
-              </div>
+            <div class="col-6 col-md">
+              <small class="audit-label">Fecha Actualización</small>
+              <div class="audit-value">-</div>
             </div>
-
           </div>
         </div>
-
         <div class="d-flex justify-content-end gap-3 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="creating">
             Cancelar
@@ -91,67 +66,52 @@
             {{ isEditMode ? 'Actualizar' : 'Crear' }}
           </button>
         </div>
-
       </form>
-
     </div>
   </div>
-
-
   <!-- =======================
-        REGISTERED ROLES
+  REGISTERED ROLES
   ======================== -->
   <div class="card shadow-sm border-0">
-
+    <!--
     <div class="card-body border-bottom d-flex justify-content-between align-items-center">
-
       <div class="d-flex align-items-center gap-2">
         <span class="material-symbols-outlined text-primary">list_alt</span>
         <h5 class="section-title mb-0">Roles registrados</h5>
       </div>
-
       <div class="search-box position-relative">
         <span class="material-symbols-outlined search-icon">search</span>
-        <input
-          type="text"
-          class="form-control form-control-sm ps-5"
-          placeholder="Buscar rol...">
+        <input type="text" class="form-control form-control-sm ps-5" placeholder="Buscar rol...">
       </div>
-
     </div>
-
+    -->
     <div class="table-responsive">
       <table class="table align-middle mb-0">
-
         <thead class="table-light">
           <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th class="text-center">Actions</th>
+            <th class="text-center align-middle">Nombre</th>
+            <th class="text-center align-middle">Descripción</th>
+            <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Acciones</th>
           </tr>
         </thead>
-
         <tbody>
           <tr *ngIf="loading">
             <td colspan="4" class="text-center py-4 text-muted">Cargando roles...</td>
           </tr>
-
           <tr *ngIf="!loading && errorMessage">
             <td colspan="4" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
-
           <tr *ngIf="!loading && !errorMessage && roles.length === 0">
             <td colspan="4" class="text-center py-4 text-muted">No hay roles registrados para la empresa.</td>
           </tr>
-
           <tr *ngFor="let rol of roles">
             <td class="fw-semibold">{{ rol.nombre }}</td>
             <td>{{ rol.descripcion }}</td>
             <td>
-              <span class="badge status-badge"
-                    [ngClass]="isActivo(rol.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
-                ● {{ rol.estado }}
+              <span class="badge"
+                [ngClass]="isActivo(rol.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                {{ isActivo(rol.estado) ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
             <td class="text-center">
@@ -163,17 +123,13 @@
               </button>
             </td>
           </tr>
-
         </tbody>
       </table>
     </div>
-
     <div class="card-footer d-flex justify-content-between align-items-center">
-
       <small class="text-muted">
         Mostrando {{ roles.length }} roles registrados
       </small>
-
       <nav>
         <ul class="pagination pagination-sm mb-0">
           <li class="page-item disabled">
@@ -193,9 +149,6 @@
           </li>
         </ul>
       </nav>
-
     </div>
-
   </div>
-
 </div>

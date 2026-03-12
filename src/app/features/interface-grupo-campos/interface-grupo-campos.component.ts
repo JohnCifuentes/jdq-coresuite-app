@@ -2,39 +2,38 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
+import { ResponseInterfazDTO } from '../../models/operacion/interfaz.models';
 import {
-  CreateInterfazDTO,
-  Modulo,
-  ResponseInterfazDTO,
-  UpdateInterfazDTO
-} from '../../models/operacion/interfaz.models';
+  CreateInterfaceGrupoCamposDTO,
+  ResponseInterfaceGrupoCamposDTO,
+  UpdateInterfaceGrupoCamposDTO
+} from '../../models/operacion/interface-grupo-campos.models';
 import { InterfazService } from '../../services/operacion/interfaz.service';
-import { ModuloService } from '../../services/operacion/modulo.service';
+import { InterfaceGrupoCamposService } from '../../services/operacion/interface-grupo-campos.service';
 
 @Component({
-  selector: 'app-interfaces',
+  selector: 'app-interface-grupo-campos',
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './interfaces.component.html',
-  styleUrl: './interfaces.component.scss'
+  templateUrl: './interface-grupo-campos.component.html',
+  styleUrl: './interface-grupo-campos.component.scss'
 })
-export class InterfacesComponent implements OnInit {
+export class InterfaceGrupoCamposComponent implements OnInit {
+  gruposCampos: ResponseInterfaceGrupoCamposDTO[] = [];
   interfaces: ResponseInterfazDTO[] = [];
-  modulos: Modulo[] = [];
   form: FormGroup;
   loading = false;
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
-  empresaId: number | null = null;
-  selectedInterfazId: number | null = null;
+  selectedGrupoId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
     private interfazService: InterfazService,
-    private moduloService: ModuloService
+    private interfaceGrupoCamposService: InterfaceGrupoCamposService
   ) {
     this.form = this.fb.group({
-      moduloId: [null, Validators.required],
+      interfazId: [null, Validators.required],
       nombre: ['', Validators.required],
       descripcion: ['', Validators.required],
       indice: [0, [Validators.required, Validators.min(0)]]
@@ -56,22 +55,20 @@ export class InterfacesComponent implements OnInit {
         } else if (user?.correoElectronico) {
           this.loggedUserName = user.correoElectronico;
         }
-
-        this.empresaId = user?.empresa?.id ?? null;
       } catch {
         this.loggedUserName = '-';
       }
     }
 
-    this.loadModulos();
     this.loadInterfaces();
+    this.loadGruposCampos();
   }
 
   get isEditMode(): boolean {
-    return this.selectedInterfazId !== null;
+    return this.selectedGrupoId !== null;
   }
 
-  submitInterfaz(): void {
+  submitGrupoCampos(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -80,18 +77,18 @@ export class InterfacesComponent implements OnInit {
     this.saving = true;
 
     if (this.isEditMode) {
-      this.updateInterfaz();
+      this.updateGrupoCampos();
       return;
     }
 
-    const payload: CreateInterfazDTO = {
-      moduloId: Number(this.form.get('moduloId')?.value),
+    const payload: CreateInterfaceGrupoCamposDTO = {
+      interfazId: Number(this.form.get('interfazId')?.value),
       nombre: this.form.get('nombre')?.value?.trim(),
       descripcion: this.form.get('descripcion')?.value?.trim(),
       indice: Number(this.form.get('indice')?.value)
     };
 
-    this.interfazService.createInterfaz(payload).subscribe({
+    this.interfaceGrupoCamposService.createInterfaceGrupoCampos(payload).subscribe({
       next: (response) => {
         this.saving = false;
 
@@ -99,17 +96,17 @@ export class InterfacesComponent implements OnInit {
           Swal.fire({
             icon: 'success',
             title: 'Operacion exitosa',
-            text: 'La interfaz fue creada correctamente.',
+            text: 'El grupo de campos fue creado correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
           this.resetForm();
-          this.loadInterfaces();
+          this.loadGruposCampos();
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible crear la interfaz.',
+            text: 'No fue posible crear el grupo de campos.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -119,18 +116,18 @@ export class InterfacesComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible crear la interfaz.',
+          text: 'No fue posible crear el grupo de campos.',
           confirmButtonText: 'Aceptar'
         });
       }
     });
   }
 
-  editInterfaz(item: ResponseInterfazDTO): void {
-    this.selectedInterfazId = item.id;
+  editGrupoCampos(item: ResponseInterfaceGrupoCamposDTO): void {
+    this.selectedGrupoId = item.id;
 
     this.form.patchValue({
-      moduloId: item.modulo?.id ?? null,
+      interfazId: item.interfaz?.id ?? null,
       nombre: item.nombre,
       descripcion: item.descripcion,
       indice: item.indice
@@ -139,32 +136,32 @@ export class InterfacesComponent implements OnInit {
 
   resetForm(): void {
     this.form.reset({
-      moduloId: null,
+      interfazId: null,
       nombre: '',
       descripcion: '',
       indice: 0
     });
-    this.selectedInterfazId = null;
+    this.selectedGrupoId = null;
   }
 
   isActivo(estado: string): boolean {
     return estado?.toUpperCase() === 'ACTIVO' || estado?.toUpperCase() === 'A';
   }
 
-  private updateInterfaz(): void {
-    if (!this.selectedInterfazId) {
+  private updateGrupoCampos(): void {
+    if (!this.selectedGrupoId) {
       this.saving = false;
       return;
     }
 
-    const payload: UpdateInterfazDTO = {
-      moduloId: Number(this.form.get('moduloId')?.value),
+    const payload: UpdateInterfaceGrupoCamposDTO = {
+      interfazId: Number(this.form.get('interfazId')?.value),
       nombre: this.form.get('nombre')?.value?.trim(),
       descripcion: this.form.get('descripcion')?.value?.trim(),
       indice: Number(this.form.get('indice')?.value)
     };
 
-    this.interfazService.updateInterfaz(this.selectedInterfazId, payload).subscribe({
+    this.interfaceGrupoCamposService.updateInterfaceGrupoCampos(this.selectedGrupoId, payload).subscribe({
       next: (response) => {
         this.saving = false;
 
@@ -172,17 +169,17 @@ export class InterfacesComponent implements OnInit {
           Swal.fire({
             icon: 'success',
             title: 'Operacion exitosa',
-            text: 'La interfaz fue actualizada correctamente.',
+            text: 'El grupo de campos fue actualizado correctamente.',
             confirmButtonText: 'Aceptar'
           });
 
           this.resetForm();
-          this.loadInterfaces();
+          this.loadGruposCampos();
         } else {
           Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No fue posible actualizar la interfaz.',
+            text: 'No fue posible actualizar el grupo de campos.',
             confirmButtonText: 'Aceptar'
           });
         }
@@ -192,7 +189,7 @@ export class InterfacesComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible actualizar la interfaz.',
+          text: 'No fue posible actualizar el grupo de campos.',
           confirmButtonText: 'Aceptar'
         });
       }
@@ -200,34 +197,29 @@ export class InterfacesComponent implements OnInit {
   }
 
   private loadInterfaces(): void {
-    this.loading = true;
-    this.errorMessage = null;
-
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
         this.interfaces = response?.contenido ?? [];
-        this.loading = false;
       },
       error: () => {
-        this.loading = false;
-        this.errorMessage = 'No fue posible cargar las interfaces registradas.';
+        this.interfaces = [];
       }
     });
   }
 
-  private loadModulos(): void {
-    const request$ = this.empresaId
-      ? this.moduloService.getModulosByEmpresa(this.empresaId)
-      : this.moduloService.getAllModulos();
+  private loadGruposCampos(): void {
+    this.loading = true;
+    this.errorMessage = null;
 
-    request$.subscribe({
+    this.interfaceGrupoCamposService.getAllInterfaceGrupoCampos().subscribe({
       next: (response) => {
-        this.modulos = response?.contenido ?? [];
+        this.gruposCampos = response?.contenido ?? [];
+        this.loading = false;
       },
       error: () => {
-        this.modulos = [];
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar los grupos de campos registrados.';
       }
     });
   }
-
 }
