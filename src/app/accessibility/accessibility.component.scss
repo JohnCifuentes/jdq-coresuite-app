@@ -1,0 +1,315 @@
+@use 'sass:color';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Accessibility Widget — Component Styles
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Tokens
+$fab-size: 52px;
+$panel-width: 300px;
+$panel-radius: 16px;
+$panel-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+$toggle-w: 44px;
+$toggle-h: 24px;
+$thumb-size: 18px;
+$color-on: #003366;
+$color-off: #cfd4db;
+$color-bg: #ffffff;
+$color-header: #f0f4f8;
+$color-text: #1a1a2e;
+$color-muted: #6c757d;
+$transition: 200ms ease;
+
+// ─── FAB ─────────────────────────────────────────────────────────────────────
+
+.a11y-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+  width: $fab-size;
+  height: $fab-size;
+  border-radius: 50%;
+  border: none;
+  background: $color-on;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 51, 102, 0.35);
+  transition: transform $transition, box-shadow $transition, background $transition;
+
+  .material-symbols-outlined {
+    font-size: 26px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color.adjust($color-on, $lightness: -8%);
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(0, 51, 102, 0.45);
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+// ─── Panel ───────────────────────────────────────────────────────────────────
+
+.a11y-panel {
+  position: fixed;
+  bottom: calc(#{$fab-size} + 36px);
+  right: 24px;
+  z-index: 1999;
+  width: $panel-width;
+  background: $color-bg;
+  border-radius: $panel-radius;
+  box-shadow: $panel-shadow;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  transform: translateY(12px) scale(0.96);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform $transition, opacity $transition;
+
+  &--open {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+
+.a11y-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  background: $color-header;
+  border-radius: $panel-radius $panel-radius 0 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.a11y-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: $color-on;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+.a11y-panel__close {
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-muted;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px;
+  transition: background $transition, color $transition;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: #e2e8f0;
+    color: $color-text;
+    outline: 2px solid $color-on;
+  }
+}
+
+// ─── List ────────────────────────────────────────────────────────────────────
+
+.a11y-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+}
+
+.a11y-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #f1f3f5;
+  transition: background $transition;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f8fafc;
+  }
+}
+
+.a11y-panel__icon {
+  font-size: 20px;
+  color: $color-on;
+  flex-shrink: 0;
+}
+
+.a11y-panel__label {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: $color-text;
+  user-select: none;
+}
+
+// ─── Toggle switch ───────────────────────────────────────────────────────────
+
+.a11y-toggle {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+
+  &:focus-visible .a11y-toggle__track {
+    outline: 2px solid $color-on;
+    outline-offset: 2px;
+  }
+}
+
+.a11y-toggle__track {
+  position: relative;
+  width: $toggle-w;
+  height: $toggle-h;
+  border-radius: $toggle-h;
+  background: $color-off;
+  transition: background $transition;
+  display: block;
+
+  .a11y-toggle[aria-checked="true"] & {
+    background: $color-on;
+  }
+}
+
+.a11y-toggle__thumb {
+  position: absolute;
+  top: ($toggle-h - $thumb-size) * 0.5;
+  left: ($toggle-h - $thumb-size) * 0.5;
+  width: $thumb-size;
+  height: $thumb-size;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform $transition;
+
+  .a11y-toggle[aria-checked="true"] & {
+    transform: translateX($toggle-w - $toggle-h);
+  }
+}
+
+// ─── Footer ──────────────────────────────────────────────────────────────────
+
+.a11y-panel__footer {
+  padding: 10px 16px 14px;
+  border-top: 1px solid #f1f3f5;
+}
+
+.a11y-reset {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #dee2e6;
+  background: transparent;
+  border-radius: 8px;
+  padding: 7px 14px;
+  width: 100%;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $color-muted;
+  cursor: pointer;
+  transition: background $transition, color $transition, border-color $transition;
+
+  .material-symbols-outlined {
+    font-size: 17px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: #fef2f2;
+    color: #dc3545;
+    border-color: #f5c2c7;
+    outline: 2px solid #dc3545;
+  }
+}
+
+// ─── Backdrop ────────────────────────────────────────────────────────────────
+
+.a11y-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1998;
+}
+
+// ─── High-contrast overrides inside the widget itself ────────────────────────
+
+:host-context(.a11y-high-contrast) {
+  .a11y-fab {
+    background: #000;
+    border: 2px solid #fff;
+    color: #fff;
+  }
+
+  .a11y-panel {
+    background: #000;
+    border-color: #fff;
+    color: #fff;
+  }
+
+  .a11y-panel__header {
+    background: #111;
+  }
+
+  .a11y-panel__title,
+  .a11y-panel__label,
+  .a11y-panel__icon {
+    color: #fff;
+  }
+
+  .a11y-panel__item {
+    border-color: #333;
+
+    &:hover {
+      background: #1a1a1a;
+    }
+  }
+
+  .a11y-toggle__track {
+    background: #555;
+  }
+
+  .a11y-toggle[aria-checked="true"] .a11y-toggle__track {
+    background: #0ff;
+  }
+
+  .a11y-reset {
+    color: #fff;
+    border-color: #fff;
+
+    &:hover {
+      background: #220000;
+      color: #ff6b6b;
+      border-color: #ff6b6b;
+    }
+  }
+}

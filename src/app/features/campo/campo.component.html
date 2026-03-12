@@ -137,8 +137,8 @@
           <tr *ngFor="let item of campos">
             <td class="fw-semibold">{{ item.nombre }}</td>
             <td>{{ item.etiqueta }}</td>
-            <td>{{ item.interfaz?.nombre }}</td>
-            <td>{{ item.tipoCampo?.nombre }}</td>
+            <td>{{ item.interfaz.nombre }}</td>
+            <td>{{ item.tipoCampo.nombre }}</td>
             <td>
               <span class="badge"
                 [ngClass]="isActivo(item.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">

@@ -7,6 +7,6 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   const role = 'admin-empresa';
 
-  return router.createUrlTree(['/app/super-admin-home']);
+  return router.createUrlTree(['/app/admin-empresa-home']);
 
 };

@@ -1,0 +1,150 @@
+<!-- ♿ Floating trigger button -->
+<button
+  class="a11y-fab"
+  type="button"
+  (click)="togglePanel()"
+  [attr.aria-expanded]="isOpen()"
+  aria-controls="a11y-panel"
+  aria-label="Abrir panel de accesibilidad"
+  title="Accesibilidad">
+  <span class="material-symbols-outlined" aria-hidden="true">accessibility_new</span>
+</button>
+
+<!-- Panel -->
+<div
+  id="a11y-panel"
+  class="a11y-panel"
+  [class.a11y-panel--open]="isOpen()"
+  role="dialog"
+  aria-modal="false"
+  aria-label="Opciones de accesibilidad"
+  aria-live="polite">
+
+  <!-- Header -->
+  <div class="a11y-panel__header">
+    <span class="a11y-panel__title">
+      <span class="material-symbols-outlined" aria-hidden="true">accessibility_new</span>
+      Accesibilidad
+    </span>
+    <button
+      class="a11y-panel__close"
+      type="button"
+      (click)="closePanel()"
+      aria-label="Cerrar panel de accesibilidad">
+      <span class="material-symbols-outlined" aria-hidden="true">close</span>
+    </button>
+  </div>
+
+  <!-- Options -->
+  <ul class="a11y-panel__list" role="list">
+
+    <!-- Large text -->
+    <li class="a11y-panel__item">
+      <span class="a11y-panel__icon material-symbols-outlined" aria-hidden="true">text_increase</span>
+      <span class="a11y-panel__label" id="lbl-large-text">Texto grande</span>
+      <button
+        class="a11y-toggle"
+        type="button"
+        role="switch"
+        [attr.aria-checked]="a11y.state().largeText"
+        aria-labelledby="lbl-large-text"
+        (click)="a11y.toggleLargeText()">
+        <span class="a11y-toggle__track">
+          <span class="a11y-toggle__thumb"></span>
+        </span>
+      </button>
+    </li>
+
+    <!-- High contrast -->
+    <li class="a11y-panel__item">
+      <span class="a11y-panel__icon material-symbols-outlined" aria-hidden="true">contrast</span>
+      <span class="a11y-panel__label" id="lbl-contrast">Alto contraste</span>
+      <button
+        class="a11y-toggle"
+        type="button"
+        role="switch"
+        [attr.aria-checked]="a11y.state().highContrast"
+        aria-labelledby="lbl-contrast"
+        (click)="a11y.toggleHighContrast()">
+        <span class="a11y-toggle__track">
+          <span class="a11y-toggle__thumb"></span>
+        </span>
+      </button>
+    </li>
+
+    <!-- Reduce motion -->
+    <li class="a11y-panel__item">
+      <span class="a11y-panel__icon material-symbols-outlined" aria-hidden="true">motion_photos_off</span>
+      <span class="a11y-panel__label" id="lbl-motion">Reducir movimiento</span>
+      <button
+        class="a11y-toggle"
+        type="button"
+        role="switch"
+        [attr.aria-checked]="a11y.state().reduceMotion"
+        aria-labelledby="lbl-motion"
+        (click)="a11y.toggleReduceMotion()">
+        <span class="a11y-toggle__track">
+          <span class="a11y-toggle__thumb"></span>
+        </span>
+      </button>
+    </li>
+
+    <!-- Dyslexia font -->
+    <li class="a11y-panel__item">
+      <span class="a11y-panel__icon material-symbols-outlined" aria-hidden="true">font_download</span>
+      <span class="a11y-panel__label" id="lbl-dyslexia">Fuente dislexia</span>
+      <button
+        class="a11y-toggle"
+        type="button"
+        role="switch"
+        [attr.aria-checked]="a11y.state().dyslexiaFont"
+        aria-labelledby="lbl-dyslexia"
+        (click)="a11y.toggleDyslexiaFont()">
+        <span class="a11y-toggle__track">
+          <span class="a11y-toggle__thumb"></span>
+        </span>
+      </button>
+    </li>
+
+    <!-- Read aloud -->
+    <li class="a11y-panel__item">
+      <span class="a11y-panel__icon material-symbols-outlined" aria-hidden="true">record_voice_over</span>
+      <span class="a11y-panel__label" id="lbl-speech">
+        {{ a11y.state().speechEnabled ? 'Detener lectura' : 'Leer en voz alta' }}
+      </span>
+      <button
+        class="a11y-toggle"
+        type="button"
+        role="switch"
+        [attr.aria-checked]="a11y.state().speechEnabled"
+        aria-labelledby="lbl-speech"
+        (click)="toggleSpeech()">
+        <span class="a11y-toggle__track">
+          <span class="a11y-toggle__thumb"></span>
+        </span>
+      </button>
+    </li>
+
+  </ul>
+
+  <!-- Footer: reset -->
+  <div class="a11y-panel__footer">
+    <button
+      class="a11y-reset"
+      type="button"
+      (click)="a11y.resetAll()"
+      aria-label="Restablecer todas las opciones de accesibilidad">
+      <span class="material-symbols-outlined" aria-hidden="true">restart_alt</span>
+      Restablecer
+    </button>
+  </div>
+
+</div>
+
+<!-- Backdrop (click-outside) -->
+<div
+  *ngIf="isOpen()"
+  class="a11y-backdrop"
+  (click)="closePanel()"
+  aria-hidden="true">
+</div>
