@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthRoutingModule } from "../../../features/auth/auth-routing.module";
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { LoginService } from '../../../services/seguridad/login.service';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [AuthRoutingModule],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
