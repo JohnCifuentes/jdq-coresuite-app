@@ -70,10 +70,7 @@ export class UsuarioService {
   }
 
   recuperarPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
-    return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(
-      `${this.apiUrl}/recuperar/password?correoElectronico=${encodeURIComponent(usuarioCredencialesDTO.correoElectronico)}&password=${encodeURIComponent(usuarioCredencialesDTO.password)}`,
-      {}
-    );
+    return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(`${this.apiUrl}/recuperar/password`, usuarioCredencialesDTO);
   }
 
   actualizarPassword(usuarioCredencialesDTO: UsuarioCredencialesDTO): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
@@ -83,6 +80,13 @@ export class UsuarioService {
   bloquearUsuario(correoElectronico: string): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
     return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(
       `${this.apiUrl}/${encodeURIComponent(correoElectronico)}/bloquear/usuario`,
+      {}
+    );
+  }
+
+  desbloquearUsuario(usuarioId: number): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
+    return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(
+      `${this.apiUrl}/${usuarioId}/desbloquear/usuario`,
       {}
     );
   }

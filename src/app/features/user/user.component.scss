@@ -56,3 +56,17 @@
 .btn-icon {
   padding: 4px 6px;
 }
+
+.user-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.user-table {
+  min-width: 1080px;
+}
+
+.user-table th,
+.user-table td {
+  white-space: nowrap;
+}

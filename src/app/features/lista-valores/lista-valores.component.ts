@@ -8,6 +8,8 @@ import {
   UpdateListaValoresDTO
 } from '../../models/operacion/lista-valores.models';
 import { ListaValoresService } from '../../services/operacion/lista-valores.service';
+import { LoginService, UserRole } from '../../services/seguridad/login.service';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-lista-valores',
@@ -24,10 +26,14 @@ export class ListaValoresComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedListaValoresId: number | null = null;
+  userRole: UserRole = 'OPERACION';
+  isSuperAdmin = false;
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
-    private listaValoresService: ListaValoresService
+    private listaValoresService: ListaValoresService,
+    private loginService: LoginService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -36,6 +42,9 @@ export class ListaValoresComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.userRole = this.loginService.getRoleFromToken();
+    this.isSuperAdmin = this.userRole === 'SUPER-ADMIN';
+
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
       this.errorMessage = 'No se encontró información del usuario logueado.';
@@ -56,13 +65,13 @@ export class ListaValoresComponent implements OnInit {
 
       const empresaId = user?.empresa?.id;
 
-      if (!empresaId) {
+      if (!empresaId && !this.isSuperAdmin) {
         this.errorMessage = 'No se encontró la empresa del usuario logueado.';
         return;
       }
 
-      this.empresaId = empresaId;
-      this.loadListaValoresByEmpresa(empresaId);
+      this.empresaId = empresaId ?? null;
+      this.refreshListaValores();
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
     }
@@ -104,7 +113,7 @@ export class ListaValoresComponent implements OnInit {
           });
 
           this.resetForm();
-          this.loadListaValoresByEmpresa(this.empresaId!);
+          this.refreshListaValores();
         } else {
           Swal.fire({
             icon: 'error',
@@ -190,7 +199,7 @@ export class ListaValoresComponent implements OnInit {
           });
 
           this.resetForm();
-          this.loadListaValoresByEmpresa(this.empresaId!);
+          this.refreshListaValores();
         } else {
           Swal.fire({
             icon: 'error',
@@ -238,7 +247,7 @@ export class ListaValoresComponent implements OnInit {
             this.resetForm();
           }
 
-          this.loadListaValoresByEmpresa(this.empresaId!);
+          this.refreshListaValores();
         } else {
           Swal.fire({
             icon: 'error',
@@ -273,5 +282,35 @@ export class ListaValoresComponent implements OnInit {
         this.errorMessage = 'No fue posible cargar las listas de valores registradas.';
       }
     });
+  }
+
+  private loadAllListaValores(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.listaValoresService.getAllListaValores().subscribe({
+      next: (response) => {
+        this.listaValores = response?.contenido ?? [];
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar las listas de valores del sistema.';
+      }
+    });
+  }
+
+  private refreshListaValores(): void {
+    if (this.isSuperAdmin) {
+      this.loadAllListaValores();
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa del usuario logueado.';
+      return;
+    }
+
+    this.loadListaValoresByEmpresa(this.empresaId);
   }
 }

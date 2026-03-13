@@ -14,6 +14,7 @@ import { UsuarioService } from '../../services/seguridad/usuario.service';
 import { RolService } from '../../services/seguridad/rol.service';
 import { ResponseUsuarioDTO } from '../../models/seguridad/usuario.models';
 import { ResponseRolDTO } from '../../models/seguridad/rol.models';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-rol-user',
@@ -26,7 +27,7 @@ export class RolUserComponent implements OnInit {
   usuariosFiltrados: ResponseUsuarioDTO[] = [];
   rolesDisponibles: ResponseRolDTO[] = [];
   asignacionesActuales: ResponseRolUsuarioDTO[] = [];
-  
+
   form: FormGroup;
   loading = false;
   saving = false;
@@ -38,6 +39,7 @@ export class RolUserComponent implements OnInit {
   usuarioActualizacion = '-';
   fechaActualizacion = '-';
   searchQuery = '';
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
@@ -136,7 +138,7 @@ export class RolUserComponent implements OnInit {
   }
 
   guardarAsignacion(): void {
-    if (!this.selectedUsuarioId || this.selectedRolIds.size === 0 || !this.empresaId) {
+    if (!this.selectedUsuarioId || !this.empresaId) {
       if (!this.selectedUsuarioId) {
         Swal.fire({
           icon: 'warning',
@@ -144,29 +146,70 @@ export class RolUserComponent implements OnInit {
           text: 'Debe seleccionar un usuario antes de asignar roles.',
           confirmButtonText: 'Aceptar'
         });
-      } else if (this.selectedRolIds.size === 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Seleccione al menos un rol',
-          text: 'Debe seleccionar al menos un rol para asignar.',
-          confirmButtonText: 'Aceptar'
-        });
       }
+      return;
+    }
+
+    const usuarioSelectado = this.usuarios.find(u => u.id === this.selectedUsuarioId);
+    if (!usuarioSelectado) {
+      return;
+    }
+
+    const asignacionesUsuario = this.asignacionesActuales.filter(
+      (asignacion) => asignacion.usuario.id === this.selectedUsuarioId && this.isActivo(asignacion.estado)
+    );
+    const rolesAsignadosIds = new Set(asignacionesUsuario.map((asignacion) => asignacion.rol.id));
+    const rolesAAgregar = Array.from(this.selectedRolIds).filter((rolId) => !rolesAsignadosIds.has(rolId));
+    const asignacionesAInactivar = asignacionesUsuario.filter(
+      (asignacion) => !this.selectedRolIds.has(asignacion.rol.id)
+    );
+
+    if (rolesAAgregar.length === 0 && asignacionesAInactivar.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin cambios',
+        text: 'No hay cambios para guardar en las asignaciones de roles.',
+        confirmButtonText: 'Aceptar'
+      });
       return;
     }
 
     this.saving = true;
 
-    // Create assignments for each selected role
-    const usuarioSelectado = this.usuarios.find(u => u.id === this.selectedUsuarioId);
-    if (!usuarioSelectado) {
-      this.saving = false;
-      return;
-    }
-
-    const rolesAAgregar = Array.from(this.selectedRolIds);
+    const totalOperaciones = rolesAAgregar.length + asignacionesAInactivar.length;
     let completados = 0;
     const errores: string[] = [];
+
+    const finalizarOperacion = () => {
+      completados++;
+
+      if (completados !== totalOperaciones) {
+        return;
+      }
+
+      this.saving = false;
+      this.usuarioActualizacion = this.loggedUserName;
+      this.fechaActualizacion = this.getCurrentDateTime();
+
+      if (errores.length === 0) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Operación exitosa',
+          text: 'Los roles fueron actualizados correctamente.',
+          confirmButtonText: 'Aceptar'
+        });
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Actualización parcial',
+          text: `Se completaron algunas operaciones. Errores: ${errores.join(', ')}`,
+          confirmButtonText: 'Aceptar'
+        });
+      }
+
+      this.resetForm();
+      this.loadAsignaciones(this.empresaId!);
+    };
 
     rolesAAgregar.forEach(rolId => {
       const payload: CreateRolUsuarioDTO = {
@@ -177,44 +220,33 @@ export class RolUserComponent implements OnInit {
 
       this.rolUsuarioService.createRolUsuario(payload).subscribe({
         next: (response) => {
-          completados++;
-          if (completados === rolesAAgregar.length) {
-            this.saving = false;
-            this.usuarioActualizacion = this.loggedUserName;
-            this.fechaActualizacion = this.getCurrentDateTime();
-
-            if (errores.length === 0) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Operación exitosa',
-                text: 'Los roles fueron asignados correctamente.',
-                confirmButtonText: 'Aceptar'
-              });
-            } else {
-              Swal.fire({
-                icon: 'warning',
-                title: 'Asignación parcial',
-                text: `Se asignaron algunos roles. Errores: ${errores.join(', ')}`,
-                confirmButtonText: 'Aceptar'
-              });
-            }
-
-            this.resetForm();
-            this.loadAsignaciones(this.empresaId!);
+          if (response.error) {
+            errores.push(`Rol ${rolId}`);
           }
+
+          finalizarOperacion();
         },
         error: () => {
-          completados++;
           errores.push(`Rol ${rolId}`);
-          if (completados === rolesAAgregar.length) {
-            this.saving = false;
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'No fue posible asignar los roles.',
-              confirmButtonText: 'Aceptar'
-            });
+          finalizarOperacion();
+        }
+      });
+    });
+
+    asignacionesAInactivar.forEach((asignacion) => {
+      const payload: InactiveRolUsuarioDTO = { estado: 'I' };
+
+      this.rolUsuarioService.inactiveRolUsuario(asignacion.id, payload).subscribe({
+        next: (response) => {
+          if (response.error) {
+            errores.push(`Rol ${asignacion.rol.nombre}`);
           }
+
+          finalizarOperacion();
+        },
+        error: () => {
+          errores.push(`Rol ${asignacion.rol.nombre}`);
+          finalizarOperacion();
         }
       });
     });
@@ -230,7 +262,7 @@ export class RolUserComponent implements OnInit {
     this.usuarioActualizacion = asignacion.usuarioActualizacion || '-';
     this.fechaActualizacion = asignacion.fechaActualizacion || '-';
     this.selectedRolIds.clear();
-    
+
     // Load current roles for this user
     const asignacionesUsuario = this.asignacionesActuales.filter(a => a.usuario.id === usuario.id);
     asignacionesUsuario.forEach(a => this.selectedRolIds.add(a.rol.id));

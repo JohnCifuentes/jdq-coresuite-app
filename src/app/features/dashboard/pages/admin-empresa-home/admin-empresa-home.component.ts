@@ -21,6 +21,7 @@ interface ActiveSessionView {
   templateUrl: './admin-empresa-home.component.html',
   styleUrl: './admin-empresa-home.component.scss'
 })
+
 export class AdminEmpresaHomeComponent implements OnInit {
   loading = false;
   errorMessage: string | null = null;
@@ -73,7 +74,6 @@ export class AdminEmpresaHomeComponent implements OnInit {
   private loadDashboardData(empresaId: number): void {
     this.loading = true;
     this.errorMessage = null;
-
     forkJoin({
       usuarios: this.usuarioService.getUsuariosByEmpresa(empresaId),
       sesiones: this.sesionService.getSesionesByEmpresa(empresaId),

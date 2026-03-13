@@ -11,6 +11,7 @@ import {
 import { UsuarioService } from '../../services/seguridad/usuario.service';
 import { TipoIdentificacionService } from '../../services/catalogo/tipo-identificacion.service';
 import { TipoIdentificacionDTO } from '../../models/catalogo/tipo-identificacion.models';
+import { LoginService, UserRole } from '../../services/seguridad/login.service';
 
 @Component({
   selector: 'app-user',
@@ -30,11 +31,14 @@ export class UserComponent implements OnInit {
   fechaActualizacion = '-';
   empresaId: number | null = null;
   selectedUsuarioId: number | null = null;
+  userRole: UserRole = 'OPERACION';
+  isSuperAdmin = false;
 
   constructor(
     private fb: FormBuilder,
     private usuarioService: UsuarioService,
-    private tipoIdentificacionService: TipoIdentificacionService
+    private tipoIdentificacionService: TipoIdentificacionService,
+    private loginService: LoginService
   ) {
     this.form = this.fb.group({
       tipoIdentificacionId: [null, Validators.required],
@@ -50,6 +54,8 @@ export class UserComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadTiposIdentificacion();
+    this.userRole = this.loginService.getRoleFromToken();
+    this.isSuperAdmin = this.userRole === 'SUPER-ADMIN';
 
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
@@ -71,13 +77,18 @@ export class UserComponent implements OnInit {
 
       const empresaId = user?.empresa?.id;
 
-      if (!empresaId) {
+      if (!empresaId && !this.isSuperAdmin) {
         this.errorMessage = 'No se encontró la empresa del usuario logueado.';
         return;
       }
 
-      this.empresaId = empresaId;
-      this.loadUsuariosByEmpresa(empresaId);
+      this.empresaId = empresaId ?? null;
+
+      if (this.isSuperAdmin) {
+        this.loadAllUsuarios();
+      } else if (empresaId) {
+        this.loadUsuariosByEmpresa(empresaId);
+      }
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
     }
@@ -200,6 +211,10 @@ export class UserComponent implements OnInit {
 
   isActivo(estado: string): boolean {
     return estado?.toUpperCase() === 'ACTIVO' || estado?.toUpperCase() === 'A';
+  }
+
+  isBloqueado(estado: string): boolean {
+    return estado?.toUpperCase() === 'B' || estado?.toUpperCase() === 'BLOQUEADO';
   }
 
   getNombreCompleto(usuario: ResponseUsuarioDTO): string {
@@ -326,6 +341,58 @@ export class UserComponent implements OnInit {
       error: () => {
         this.loading = false;
         this.errorMessage = 'No fue posible cargar los usuarios registrados.';
+      }
+    });
+  }
+
+  private loadAllUsuarios(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.usuarioService.getAllUsuarios().subscribe({
+      next: (response) => {
+        this.usuarios = response?.contenido ?? [];
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar los usuarios del sistema.';
+      }
+    });
+  }
+
+  desbloquearUsuario(usuario: ResponseUsuarioDTO): void {
+    this.usuarioService.desbloquearUsuario(usuario.id).subscribe({
+      next: (response) => {
+        if (!response.error) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Operación exitosa',
+            text: 'El usuario fue desbloqueado correctamente.',
+            confirmButtonText: 'Aceptar'
+          });
+
+          if (this.isSuperAdmin) {
+            this.loadAllUsuarios();
+          } else if (this.empresaId) {
+            this.loadUsuariosByEmpresa(this.empresaId);
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No fue posible desbloquear el usuario.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No fue posible desbloquear el usuario.',
+          confirmButtonText: 'Aceptar'
+        });
       }
     });
   }

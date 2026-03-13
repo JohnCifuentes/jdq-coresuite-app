@@ -31,6 +31,7 @@ export class CampoComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedCampoId: number | null = null;
+  private tiposConListaValores = new Set(['SELECT', 'RADIO', 'CHECKBOX']);
 
   constructor(
     private fb: FormBuilder,
@@ -44,13 +45,13 @@ export class CampoComponent implements OnInit {
       interfazId: [null, Validators.required],
       interfaceGrupoCamposId: [null, Validators.required],
       tipoCampoId: [null, Validators.required],
-      listaValoresId: [null, Validators.required],
+      listaValoresId: [null],
       nombre: ['', Validators.required],
       etiqueta: ['', Validators.required],
       descripcion: ['', Validators.required],
       indice: [0, [Validators.required, Validators.min(0)]],
-      columnas: [12, [Validators.required, Validators.min(1)]],
-      valorDefecto: ['', Validators.required]
+      columnas: [1, [Validators.required, Validators.min(1), Validators.max(3)]],
+      valorDefecto: ['']
     });
   }
 
@@ -75,6 +76,7 @@ export class CampoComponent implements OnInit {
     }
 
     this.loadCatalogos();
+    this.setupConditionalValidators();
     this.loadCampos();
   }
 
@@ -99,13 +101,15 @@ export class CampoComponent implements OnInit {
       interfazId: Number(this.form.get('interfazId')?.value),
       interfaceGrupoCamposId: Number(this.form.get('interfaceGrupoCamposId')?.value),
       tipoCampoId: Number(this.form.get('tipoCampoId')?.value),
-      listaValoresId: Number(this.form.get('listaValoresId')?.value),
+      listaValoresId: this.requiresListaValores()
+        ? Number(this.form.get('listaValoresId')?.value)
+        : null,
       nombre: this.form.get('nombre')?.value?.trim(),
       etiqueta: this.form.get('etiqueta')?.value?.trim(),
       descripcion: this.form.get('descripcion')?.value?.trim(),
       indice: Number(this.form.get('indice')?.value),
       columnas: Number(this.form.get('columnas')?.value),
-      valorDefecto: this.form.get('valorDefecto')?.value?.trim()
+      valorDefecto: this.normalizeOptionalText(this.form.get('valorDefecto')?.value)
     };
 
     this.campoService.createCampo(payload).subscribe({
@@ -156,7 +160,7 @@ export class CampoComponent implements OnInit {
       descripcion: item.descripcion,
       indice: item.indice,
       columnas: item.columnas,
-      valorDefecto: item.valorDefecto
+      valorDefecto: item.valorDefecto ?? ''
     });
   }
 
@@ -170,7 +174,7 @@ export class CampoComponent implements OnInit {
       etiqueta: '',
       descripcion: '',
       indice: 0,
-      columnas: 12,
+      columnas: 1,
       valorDefecto: ''
     });
     this.selectedCampoId = null;
@@ -190,13 +194,15 @@ export class CampoComponent implements OnInit {
       interfazId: Number(this.form.get('interfazId')?.value),
       interfaceGrupoCamposId: Number(this.form.get('interfaceGrupoCamposId')?.value),
       tipoCampoId: Number(this.form.get('tipoCampoId')?.value),
-      listaValoresId: Number(this.form.get('listaValoresId')?.value),
+      listaValoresId: this.requiresListaValores()
+        ? Number(this.form.get('listaValoresId')?.value)
+        : null,
       nombre: this.form.get('nombre')?.value?.trim(),
       etiqueta: this.form.get('etiqueta')?.value?.trim(),
       descripcion: this.form.get('descripcion')?.value?.trim(),
       indice: Number(this.form.get('indice')?.value),
       columnas: Number(this.form.get('columnas')?.value),
-      valorDefecto: this.form.get('valorDefecto')?.value?.trim()
+      valorDefecto: this.normalizeOptionalText(this.form.get('valorDefecto')?.value)
     };
 
     this.campoService.updateCampo(this.selectedCampoId, payload).subscribe({
@@ -286,5 +292,42 @@ export class CampoComponent implements OnInit {
         this.errorMessage = 'No fue posible cargar los campos registrados.';
       }
     });
+  }
+
+  requiresListaValores(): boolean {
+    const tipoCampoId = this.form.get('tipoCampoId')?.value;
+
+    if (!tipoCampoId) {
+      return false;
+    }
+
+    const tipoSeleccionado = this.tiposCampo.find((item) => item.id === Number(tipoCampoId));
+    const nombreTipo = (tipoSeleccionado?.nombre ?? '').trim().toUpperCase();
+
+    return this.tiposConListaValores.has(nombreTipo);
+  }
+
+  private setupConditionalValidators(): void {
+    this.form.get('tipoCampoId')?.valueChanges.subscribe(() => {
+      const listaValoresControl = this.form.get('listaValoresId');
+
+      if (!listaValoresControl) {
+        return;
+      }
+
+      if (this.requiresListaValores()) {
+        listaValoresControl.setValidators([Validators.required]);
+      } else {
+        listaValoresControl.clearValidators();
+        listaValoresControl.setValue(null);
+      }
+
+      listaValoresControl.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
+  private normalizeOptionalText(value: unknown): string | null {
+    const normalized = typeof value === 'string' ? value.trim() : '';
+    return normalized.length > 0 ? normalized : null;
   }
 }

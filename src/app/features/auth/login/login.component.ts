@@ -76,7 +76,9 @@ export class LoginComponent {
       next: (res: any) => {
         if (!res.error) {
           this.failedAttempts = 0;
-          this.loginService.setToken(res.contenido.token);
+          const token = res.contenido.token;
+          this.loginService.setToken(token);
+          const redirectUrl = this.loginService.getRedirectFromToken(token);
           this.usuarioService.getUsuarioByCorreoElectronicoAndPassword(creds).subscribe({
             next: userRes => {
               if (!userRes.error && userRes.contenido) {
@@ -92,11 +94,11 @@ export class LoginComponent {
                   this.router.navigate(['/reset-password'], { queryParams: { email: creds.correoElectronico, firstAccess: 'true' } });
                 });
               } else {
-                this.router.navigate(['/app']);
+                this.router.navigateByUrl(redirectUrl);
               }
             },
             error: () => {
-              this.router.navigate(['/app']);
+              this.router.navigateByUrl(redirectUrl);
             }
           });
         } else {

@@ -40,7 +40,7 @@ export class CampoValidacionComponent implements OnInit {
       campoId: [null, Validators.required],
       tipoValidacionId: [null, Validators.required],
       valor: ['', Validators.required],
-      campoReferenciaId: [null, Validators.required]
+      campoReferenciaId: [null]
     });
   }
 
@@ -89,7 +89,7 @@ export class CampoValidacionComponent implements OnInit {
       campoId: Number(this.form.get('campoId')?.value),
       tipoValidacionId: Number(this.form.get('tipoValidacionId')?.value),
       valor: this.form.get('valor')?.value?.trim(),
-      campoReferenciaId: Number(this.form.get('campoReferenciaId')?.value)
+      campoReferenciaId: this.getCampoReferenciaIdOrNull()
     };
 
     this.campoValidacionService.createCampoValidacion(payload).subscribe({
@@ -162,7 +162,7 @@ export class CampoValidacionComponent implements OnInit {
       campoId: Number(this.form.get('campoId')?.value),
       tipoValidacionId: Number(this.form.get('tipoValidacionId')?.value),
       valor: this.form.get('valor')?.value?.trim(),
-      campoReferenciaId: Number(this.form.get('campoReferenciaId')?.value)
+      campoReferenciaId: this.getCampoReferenciaIdOrNull()
     };
 
     this.campoValidacionService.updateCampoValidacion(this.selectedCampoValidacionId, payload).subscribe({
@@ -234,5 +234,10 @@ export class CampoValidacionComponent implements OnInit {
         this.errorMessage = 'No fue posible cargar las validaciones de campo registradas.';
       }
     });
+  }
+
+  private getCampoReferenciaIdOrNull(): number | null {
+    const value = this.form.get('campoReferenciaId')?.value;
+    return value === null || value === undefined || value === '' ? null : Number(value);
   }
 }

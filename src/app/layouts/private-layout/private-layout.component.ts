@@ -1,15 +1,21 @@
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
+import { Router, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from "./sidebar/sidebar.component";
 import { HeaderPrivateComponent } from "./header-private/header-private.component";
-import { AuthRoutingModule } from "../../features/auth/auth-routing.module";
 
 @Component({
   selector: 'app-private-layout',
-  imports: [SidebarComponent, HeaderPrivateComponent, AuthRoutingModule],
+  imports: [CommonModule, SidebarComponent, HeaderPrivateComponent, RouterOutlet],
   templateUrl: './private-layout.component.html',
   styleUrl: './private-layout.component.scss'
 })
 
 export class PrivateLayoutComponent {
+  constructor(private router: Router) {}
+
+  isOperacionRoute(): boolean {
+    return this.router.url.startsWith('/app/operacion');
+  }
 
 }

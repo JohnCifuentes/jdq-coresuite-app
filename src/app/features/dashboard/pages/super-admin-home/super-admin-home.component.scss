@@ -1,0 +1,178 @@
+.dashboard-card {
+	border: none;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.card-header-custom {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.card-header-custom .label {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: #6c757d;
+}
+
+.card-value {
+	font-size: 2rem;
+	font-weight: 700;
+}
+
+.card-trend {
+	font-size: 0.85rem;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.card-info {
+	font-size: 0.85rem;
+	color: #6c757d;
+}
+
+.icon {
+	padding: 8px;
+	border-radius: 8px;
+}
+
+/* CHART */
+
+.chart-container {
+	height: 240px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+}
+
+.chart-bars {
+	display: flex;
+	align-items: flex-end;
+	gap: 8px;
+	height: 100%;
+}
+
+.chart-bar {
+	flex: 1;
+	background: rgba(13, 110, 253, 0.2);
+	border-radius: 6px 6px 0 0;
+	transition: background 0.2s;
+}
+
+.chart-bar:hover {
+	background: rgba(13, 110, 253, 0.6);
+}
+
+.chart-bar.active {
+	background: #0d6efd;
+}
+
+.bar-40 {
+	height: 40%;
+}
+
+.bar-45 {
+	height: 45%;
+}
+
+.bar-55 {
+	height: 55%;
+}
+
+.bar-70 {
+	height: 70%;
+}
+
+.bar-85 {
+	height: 85%;
+}
+
+.bar-100 {
+	height: 100%;
+}
+
+.chart-labels {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 12px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: #6c757d;
+}
+
+/* USERS */
+
+.users-list {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.user-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.avatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	font-weight: 600;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.user-info .name {
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+
+.user-info .meta {
+	font-size: 0.75rem;
+	color: #6c757d;
+}
+
+.status {
+	width: 8px;
+	height: 8px;
+	background: #10b981;
+	border-radius: 50%;
+	margin-left: auto;
+}
+
+/* SOFT COLORS */
+
+.bg-primary-soft {
+	background: rgba(13, 110, 253, 0.1);
+}
+
+.bg-success-soft {
+	background: rgba(25, 135, 84, 0.1);
+}
+
+.bg-warning-soft {
+	background: rgba(255, 193, 7, 0.15);
+}
+
+.bg-blue-soft {
+	background: rgba(13, 110, 253, 0.1);
+}
+
+.bg-purple-soft {
+	background: rgba(111, 66, 193, 0.1);
+}
+
+.text-blue {
+	color: #0d6efd;
+}
+
+.text-purple {
+	color: #6f42c1;
+}

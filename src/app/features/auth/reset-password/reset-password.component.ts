@@ -118,8 +118,6 @@ export class ResetPasswordComponent implements OnInit {
       correoElectronico: this.email,
       password: this.form.get('password')!.value
     };
-
-    console.log('Recuperando contraseña para:', credentials.correoElectronico);
     
     this.usuarioService.recuperarPassword(credentials).subscribe({
       next: () => {

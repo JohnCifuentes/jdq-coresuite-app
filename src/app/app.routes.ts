@@ -25,6 +25,7 @@ import { TipoValidacionComponent } from './features/tipo-validacion/tipo-validac
 import { InterfaceGrupoCamposComponent } from './features/interface-grupo-campos/interface-grupo-campos.component';
 import { CampoComponent } from './features/campo/campo.component';
 import { CampoValidacionComponent } from './features/campo-validacion/campo-validacion.component';
+import { OperacionLayoutComponent } from './layouts/operacion-layout/operacion-layout.component';
 
 export const routes: Routes = [
   {
@@ -51,6 +52,7 @@ export const routes: Routes = [
       },
       { path: 'super-admin-home', component: SuperAdminHomeComponent },
       { path: 'admin-empresa-home', component: AdminEmpresaHomeComponent },
+      { path: 'operacion-layout', component: OperacionLayoutComponent },
       { path: 'rol', component: RolComponent },
       { path: 'user', component: UserComponent },
       { path: 'rol-user', component: RolUserComponent },
@@ -63,6 +65,16 @@ export const routes: Routes = [
       { path: 'interface-grupo-campos', component: InterfaceGrupoCamposComponent },
       { path: 'campo', component: CampoComponent },
       { path: 'campo-validacion', component: CampoValidacionComponent }
+    ]
+  },
+  {
+    path: 'app/operacion',
+    component: OperacionLayoutComponent,
+    children: [
+      {
+        path: '', canActivate: [roleGuard], component: AdminEmpresaHomeComponent, pathMatch: 'full'
+      },
+      { path: 'super-admin-home', component: SuperAdminHomeComponent }
     ]
   }
 ];

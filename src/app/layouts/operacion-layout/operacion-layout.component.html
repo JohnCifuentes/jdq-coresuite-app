@@ -1,0 +1,9 @@
+<div class="app-container d-flex flex-column vh-100">
+    <app-header-operacion></app-header-operacion>
+    <div class="d-flex flex-grow-1 overflow-hidden">
+        <app-sidebar-operacion class="sidebar"></app-sidebar-operacion>
+        <main class="flex-grow-1 p-4 bg-light overflow-auto">
+            <router-outlet></router-outlet>
+        </main>
+    </div>
+</div>

@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CreateRolDTO, InactiveRolDTO, ResponseRolDTO, UpdateRolDTO } from '../../models/seguridad/rol.models';
 import { RolService } from '../../services/seguridad/rol.service';
+import { LoginService, UserRole } from '../../services/seguridad/login.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -20,10 +21,13 @@ export class RolComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedRolId: number | null = null;
+  userRole: UserRole = 'OPERACION';
+  isSuperAdmin = false;
 
   constructor(
     private fb: FormBuilder,
-    private rolService: RolService
+    private rolService: RolService,
+    private loginService: LoginService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -32,6 +36,9 @@ export class RolComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.userRole = this.loginService.getRoleFromToken();
+    this.isSuperAdmin = this.userRole === 'SUPER-ADMIN';
+
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
       this.errorMessage = 'No se encontró información del usuario logueado.';
@@ -52,13 +59,13 @@ export class RolComponent implements OnInit {
 
       const empresaId = user?.empresa?.id;
 
-      if (!empresaId) {
+      if (!empresaId && !this.isSuperAdmin) {
         this.errorMessage = 'No se encontró la empresa del usuario logueado.';
         return;
       }
 
-      this.empresaId = empresaId;
-      this.loadRolesByEmpresa(empresaId);
+      this.empresaId = empresaId ?? null;
+      this.refreshRoles();
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
     }
@@ -100,7 +107,7 @@ export class RolComponent implements OnInit {
           });
 
           this.resetForm();
-          this.loadRolesByEmpresa(this.empresaId!);
+          this.refreshRoles();
         } else {
           Swal.fire({
             icon: 'error',
@@ -181,7 +188,7 @@ export class RolComponent implements OnInit {
           });
 
           this.resetForm();
-          this.loadRolesByEmpresa(this.empresaId!);
+          this.refreshRoles();
         } else {
           Swal.fire({
             icon: 'error',
@@ -220,7 +227,7 @@ export class RolComponent implements OnInit {
             this.resetForm();
           }
 
-          this.loadRolesByEmpresa(this.empresaId!);
+          this.refreshRoles();
         } else {
           Swal.fire({
             icon: 'error',
@@ -255,6 +262,36 @@ export class RolComponent implements OnInit {
         this.errorMessage = 'No fue posible cargar los roles registrados.';
       }
     });
+  }
+
+  private loadAllRoles(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.rolService.getAllRoles().subscribe({
+      next: (response) => {
+        this.roles = response?.contenido ?? [];
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar los roles del sistema.';
+      }
+    });
+  }
+
+  private refreshRoles(): void {
+    if (this.isSuperAdmin) {
+      this.loadAllRoles();
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa del usuario logueado.';
+      return;
+    }
+
+    this.loadRolesByEmpresa(this.empresaId);
   }
 
 }

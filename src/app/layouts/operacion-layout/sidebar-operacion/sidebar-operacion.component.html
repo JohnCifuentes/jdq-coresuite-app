@@ -1,0 +1,38 @@
+<aside class="h-100 d-flex flex-column bg-white border-end">
+  <nav class="flex-grow-1 px-3 overflow-auto py-3">
+    <div class="text-uppercase small text-muted fw-semibold mb-3">Operacion</div>
+    <ul class="nav nav-pills flex-column gap-2">
+      <li class="nav-item">
+        <a
+          class="nav-link d-flex align-items-center gap-2"
+          href=""
+          routerLink="/app/operacion-layout"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Panel principal</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="p-3 border-top flex-shrink-0 bg-white">
+    <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
+      <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center flex-shrink-0"
+        style="width:44px;height:44px;min-width:44px;">
+        {{ userInitials }}
+      </div>
+      <div class="flex-grow-1 overflow-hidden">
+        <div class="fw-semibold small text-truncate">{{ userName }}</div>
+        <div class="text-muted small text-truncate">{{ userRole }}</div>
+      </div>
+    </div>
+    <button
+      type="button"
+      class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
+      (click)="logout()">
+      <span class="material-symbols-outlined" style="font-size: 18px;">logout</span>
+      <span>Cerrar sesion</span>
+    </button>
+  </div>
+</aside>

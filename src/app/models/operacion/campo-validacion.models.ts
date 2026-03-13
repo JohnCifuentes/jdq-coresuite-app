@@ -34,14 +34,14 @@ export interface CreateCampoValidacionDTO {
   campoId: number;
   tipoValidacionId: number;
   valor: string;
-  campoReferenciaId: number;
+  campoReferenciaId: number | null;
 }
 
 export interface UpdateCampoValidacionDTO {
   campoId: number;
   tipoValidacionId: number;
   valor: string;
-  campoReferenciaId: number;
+  campoReferenciaId: number | null;
 }
 
 export interface ResponseCampoValidacionDTO {

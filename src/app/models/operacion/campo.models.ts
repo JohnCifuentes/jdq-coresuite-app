@@ -56,26 +56,26 @@ export interface CreateCampoDTO {
   interfazId: number;
   interfaceGrupoCamposId: number;
   tipoCampoId: number;
-  listaValoresId: number;
+  listaValoresId: number | null;
   nombre: string;
   etiqueta: string;
   descripcion: string;
   indice: number;
   columnas: number;
-  valorDefecto: string;
+  valorDefecto: string | null;
 }
 
 export interface UpdateCampoDTO {
   interfazId: number;
   interfaceGrupoCamposId: number;
   tipoCampoId: number;
-  listaValoresId: number;
+  listaValoresId: number | null;
   nombre: string;
   etiqueta: string;
   descripcion: string;
   indice: number;
   columnas: number;
-  valorDefecto: string;
+  valorDefecto: string | null;
 }
 
 export interface ResponseCampoDTO {

@@ -8,6 +8,8 @@ import {
   ResponseModuloDTO
 } from '../../models/operacion/modulo.models';
 import { ModuloService } from '../../services/operacion/modulo.service';
+import { LoginService, UserRole } from '../../services/seguridad/login.service';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-module',
@@ -26,10 +28,14 @@ export class ModuleComponent implements OnInit {
   selectedModuloId: number | null = null;
   usuarioActualizacion = '-';
   fechaActualizacion = '-';
+  userRole: UserRole = 'OPERACION';
+  isSuperAdmin = false;
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
-    private moduloService: ModuloService
+    private moduloService: ModuloService,
+    private loginService: LoginService
   ) {
     this.form = this.fb.group({
       nombre: ['', Validators.required],
@@ -39,6 +45,9 @@ export class ModuleComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.userRole = this.loginService.getRoleFromToken();
+    this.isSuperAdmin = this.userRole === 'SUPER-ADMIN';
+
     const rawUser = localStorage.getItem('auth_user');
     if (!rawUser) {
       this.errorMessage = 'No se encontró información del usuario logueado.';
@@ -59,13 +68,13 @@ export class ModuleComponent implements OnInit {
 
       const empresaId = user?.empresa?.id;
 
-      if (!empresaId) {
+      if (!empresaId && !this.isSuperAdmin) {
         this.errorMessage = 'No se encontró la empresa del usuario logueado.';
         return;
       }
 
-      this.empresaId = empresaId;
-      this.loadModulosByEmpresa(empresaId);
+      this.empresaId = empresaId ?? null;
+      this.refreshModulos();
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
     }
@@ -108,7 +117,7 @@ export class ModuleComponent implements OnInit {
           });
 
           this.resetForm();
-          this.loadModulosByEmpresa(this.empresaId!);
+          this.refreshModulos();
         } else {
           Swal.fire({
             icon: 'error',
@@ -204,7 +213,7 @@ export class ModuleComponent implements OnInit {
             confirmButtonText: 'Aceptar'
           });
 
-          this.loadModulosByEmpresa(this.empresaId!);
+          this.refreshModulos();
         } else {
           Swal.fire({
             icon: 'error',
@@ -249,7 +258,7 @@ export class ModuleComponent implements OnInit {
             this.resetForm();
           }
 
-          this.loadModulosByEmpresa(this.empresaId!);
+          this.refreshModulos();
         } else {
           Swal.fire({
             icon: 'error',
@@ -284,6 +293,36 @@ export class ModuleComponent implements OnInit {
         this.errorMessage = 'No fue posible cargar los módulos registrados.';
       }
     });
+  }
+
+  private loadAllModulos(): void {
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.moduloService.getAllModulos().subscribe({
+      next: (response) => {
+        this.modulos = (response?.contenido ?? []).map((modulo) => this.normalizeModulo(modulo));
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar los módulos del sistema.';
+      }
+    });
+  }
+
+  private refreshModulos(): void {
+    if (this.isSuperAdmin) {
+      this.loadAllModulos();
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa del usuario logueado.';
+      return;
+    }
+
+    this.loadModulosByEmpresa(this.empresaId);
   }
 
   getIndiceDisplay(modulo: ResponseModuloDTO): string {

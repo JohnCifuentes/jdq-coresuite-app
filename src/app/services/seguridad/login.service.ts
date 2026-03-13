@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -15,6 +15,12 @@ interface LoginRequest {
   password: string;
 }
 
+export type UserRole = 'SUPER-ADMIN' | 'ADMIN-EMPRESA' | 'OPERACION';
+
+interface TokenClaims {
+  rol?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,8 +30,25 @@ export class LoginService {
 
   constructor(private http: HttpClient) {}
 
+  private getAuthOptions() {
+    const token = localStorage.getItem(this.storageKey);
+    if (!token) {
+      return {};
+    }
+
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      })
+    };
+  }
+
   login(credentials: LoginRequest): Observable<RespuestaDTO<LoginResponse>> {
     return this.http.post<RespuestaDTO<LoginResponse>>(this.apiUrl, credentials);
+  }
+
+  cerrarSesion(usuarioId: number): Observable<RespuestaDTO<string>> {
+    return this.http.put<RespuestaDTO<string>>(this.apiUrl, usuarioId, this.getAuthOptions());
   }
 
   setToken(token: string) {
@@ -42,5 +65,50 @@ export class LoginService {
 
   isLoggedIn(): boolean {
     return !!this.getToken();
+  }
+
+  getRoleFromToken(token: string | null = this.getToken()): UserRole {
+    if (!token) {
+      return 'OPERACION';
+    }
+
+    try {
+      const payload = token.split('.')[1];
+
+      if (!payload) {
+        return 'OPERACION';
+      }
+
+      const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const paddingLength = (4 - (normalizedPayload.length % 4)) % 4;
+      const paddedPayload = normalizedPayload + '='.repeat(paddingLength);
+      const decodedPayload = atob(paddedPayload);
+      const claims = JSON.parse(decodedPayload) as TokenClaims;
+      const role = (claims.rol ?? '').toUpperCase();
+
+      if (role === 'SUPER-ADMIN' || role === 'ADMIN-EMPRESA' || role === 'OPERACION') {
+        return role;
+      }
+
+      return 'OPERACION';
+    } catch {
+      return 'OPERACION';
+    }
+  }
+
+  getRedirectByRole(role: UserRole): string {
+    if (role === 'SUPER-ADMIN') {
+      return '/app/super-admin-home';
+    }
+
+    if (role === 'ADMIN-EMPRESA') {
+      return '/app/admin-empresa-home';
+    }
+
+    return '/app/operacion';
+  }
+
+  getRedirectFromToken(token: string | null = this.getToken()): string {
+    return this.getRedirectByRole(this.getRoleFromToken(token));
   }
 }

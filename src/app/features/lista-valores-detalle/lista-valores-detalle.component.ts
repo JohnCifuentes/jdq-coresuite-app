@@ -10,6 +10,7 @@ import {
 } from '../../models/operacion/lista-valores-detalle.models';
 import { ListaValoresService } from '../../services/operacion/lista-valores.service';
 import { ListaValoresDetalleService } from '../../services/operacion/lista-valores-detalle.service';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-lista-valores-detalle',
@@ -27,6 +28,7 @@ export class ListaValoresDetalleComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedDetalleId: number | null = null;
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,

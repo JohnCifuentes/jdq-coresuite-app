@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthRoutingModule } from "../../../features/auth/auth-routing.module";
+import { AuthRoutingModule } from '../../../features/auth/auth-routing.module';
 import { LoginService } from '../../../services/seguridad/login.service';
 import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-sidebar',
+  selector: 'app-sidebar-operacion',
+  standalone: true,
   imports: [AuthRoutingModule],
-  templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.scss'
+  templateUrl: './sidebar-operacion.component.html',
+  styleUrl: './sidebar-operacion.component.scss'
 })
-
-export class SidebarComponent implements OnInit {
+export class SidebarOperacionComponent implements OnInit {
   userName = 'Usuario';
-  userRole = 'Usuario';
+  userRole = 'Operacion';
   userInitials = 'US';
 
   constructor(
@@ -51,7 +51,7 @@ export class SidebarComponent implements OnInit {
       title: '¿Cerrar sesión?',
       text: '¿Está seguro de que desea cerrar sesión?',
       showCancelButton: true,
-      confirmButtonText: 'Sí, cerrar sesión',
+      confirmButtonText: 'Si, cerrar sesion',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -69,8 +69,8 @@ export class SidebarComponent implements OnInit {
           error: () => {
             this.finalizeLogout({
               icon: 'warning',
-              title: 'Sesión cerrada localmente',
-              text: 'No se pudo notificar el cierre de sesión al servidor, pero tu sesión local fue cerrada.'
+              title: 'Sesion cerrada localmente',
+              text: 'No se pudo notificar el cierre de sesion al servidor, pero tu sesion local fue cerrada.'
             });
           }
         });
@@ -100,15 +100,15 @@ export class SidebarComponent implements OnInit {
     this.router.navigate(['/login']).then(() => {
       Swal.fire({
         icon: alert?.icon ?? 'success',
-        title: alert?.title ?? 'Sesión cerrada',
-        text: alert?.text ?? 'Has cerrado sesión correctamente.',
+        title: alert?.title ?? 'Sesion cerrada',
+        text: alert?.text ?? 'Has cerrado sesion correctamente.',
         confirmButtonText: 'Aceptar'
       });
     });
   }
 
   private buildInitials(fullName: string): string {
-    const words = fullName.split(' ').filter(word => word.length > 0);
+    const words = fullName.split(' ').filter((word) => word.length > 0);
     if (words.length === 0) {
       return 'US';
     }
@@ -119,5 +119,4 @@ export class SidebarComponent implements OnInit {
 
     return `${words[0][0]}${words[1][0]}`.toUpperCase();
   }
-
 }

@@ -8,6 +8,7 @@ import {
   UpdateTipoCampoDTO
 } from '../../models/operacion/tipo-campo.models';
 import { TipoCampoService } from '../../services/operacion/tipo-campo.service';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-tipo-campo',
@@ -23,6 +24,7 @@ export class TipoCampoComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedTipoCampoId: number | null = null;
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,

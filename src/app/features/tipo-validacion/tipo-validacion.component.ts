@@ -8,6 +8,7 @@ import {
   UpdateTipoValidacionDTO
 } from '../../models/operacion/tipo-validacion.models';
 import { TipoValidacionService } from '../../services/operacion/tipo-validacion.service';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-tipo-validacion',
@@ -23,6 +24,7 @@ export class TipoValidacionComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedTipoValidacionId: number | null = null;
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,

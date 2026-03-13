@@ -88,6 +88,20 @@ a[routerLink] {
   border-top: 1px solid #eef2f6;
 }
 
+.records-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.records-table {
+  min-width: 1080px;
+}
+
+.records-table th,
+.records-table td {
+  white-space: nowrap;
+}
+
 /* ===================================================================
    ACCESSIBILITY GLOBAL MODES  (applied via AccessibilityService on <body>)
    =================================================================== */

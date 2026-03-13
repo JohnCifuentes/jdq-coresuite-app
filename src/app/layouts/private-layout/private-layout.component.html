@@ -1,9 +1,15 @@
-<div class="app-container d-flex flex-column vh-100">
-    <app-header-private></app-header-private>
-    <div class="d-flex flex-grow-1 overflow-hidden">
-        <app-sidebar class="sidebar"></app-sidebar>
-        <main class="flex-grow-1 p-4 bg-light overflow-auto">
-            <router-outlet></router-outlet>
-        </main>
+<ng-container *ngIf="!isOperacionRoute(); else operacionContent">
+    <div class="app-container d-flex flex-column vh-100">
+        <app-header-private></app-header-private>
+        <div class="d-flex flex-grow-1 overflow-hidden">
+            <app-sidebar class="sidebar"></app-sidebar>
+            <main class="flex-grow-1 p-4 bg-light overflow-auto">
+                <router-outlet></router-outlet>
+            </main>
+        </div>
     </div>
-</div>
+</ng-container>
+
+<ng-template #operacionContent>
+    <router-outlet></router-outlet>
+</ng-template>
