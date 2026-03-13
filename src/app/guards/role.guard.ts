@@ -9,10 +9,15 @@ export const roleGuard: CanActivateFn = (route, state) => {
   const redirectUrl = loginService.getRedirectFromToken();
   const currentUrl = state.url.split('?')[0];
 
+  // Keep role-based landing redirect only when entering the app root.
+  if (currentUrl === '/app' || currentUrl === '/app/') {
+    return router.parseUrl(redirectUrl);
+  }
+
   if (currentUrl === redirectUrl) {
     return true;
   }
 
-  return router.parseUrl(redirectUrl);
+  return true;
 
 };

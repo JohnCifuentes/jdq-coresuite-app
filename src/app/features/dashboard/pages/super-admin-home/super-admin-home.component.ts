@@ -109,7 +109,7 @@ export class SuperAdminHomeComponent implements OnInit {
         return rightTime - leftTime;
       })
       .map((sesion) => {
-        const usuario = usuariosPorId.get(sesion.usuario.id);
+        const usuario = sesion.usuario?.id ? usuariosPorId.get(sesion.usuario.id) : undefined;
         const displayName = this.getDisplayName(usuario, sesion);
 
         return {
@@ -136,7 +136,7 @@ export class SuperAdminHomeComponent implements OnInit {
       return fullName;
     }
 
-    return usuario?.correoElectronico ?? sesion.usuario.nombre;
+    return usuario?.correoElectronico ?? sesion.usuario?.nombre ?? 'Usuario sin nombre';
   }
 
   private getInitials(displayName: string): string {
