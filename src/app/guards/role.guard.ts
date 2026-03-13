@@ -6,7 +6,13 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   const router = inject(Router);
   const loginService = inject(LoginService);
+  const redirectUrl = loginService.getRedirectFromToken();
+  const currentUrl = state.url.split('?')[0];
 
-  return router.createUrlTree([loginService.getRedirectFromToken()]);
+  if (currentUrl === redirectUrl) {
+    return true;
+  }
+
+  return router.parseUrl(redirectUrl);
 
 };

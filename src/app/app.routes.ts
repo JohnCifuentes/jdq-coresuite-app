@@ -48,33 +48,30 @@ export const routes: Routes = [
     component: PrivateLayoutComponent,
     children: [
       {
-        path: '', canActivate: [roleGuard], component: AdminEmpresaHomeComponent, pathMatch: 'full'
+        path: '',
+        canActivate: [roleGuard],
+        component: AdminEmpresaHomeComponent,
+        pathMatch: 'full'
       },
-      { path: 'super-admin-home', component: SuperAdminHomeComponent },
-      { path: 'admin-empresa-home', component: AdminEmpresaHomeComponent },
-      { path: 'operacion-layout', component: OperacionLayoutComponent },
-      { path: 'rol', component: RolComponent },
-      { path: 'user', component: UserComponent },
-      { path: 'rol-user', component: RolUserComponent },
-      { path: 'module', component: ModuleComponent },
-      { path: 'interface', component: InterfacesComponent },
-      { path: 'lista-valores', component: ListaValoresComponent },
-      { path: 'lista-valores-detalle', component: ListaValoresDetalleComponent },
-      { path: 'tipo-campo', component: TipoCampoComponent },
-      { path: 'tipo-validacion', component: TipoValidacionComponent },
-      { path: 'interface-grupo-campos', component: InterfaceGrupoCamposComponent },
-      { path: 'campo', component: CampoComponent },
-      { path: 'campo-validacion', component: CampoValidacionComponent }
+      { path: 'super-admin-home', canActivate: [roleGuard], component: SuperAdminHomeComponent },
+      { path: 'admin-empresa-home', canActivate: [roleGuard], component: AdminEmpresaHomeComponent },
+      { path: 'rol', canActivate: [roleGuard], component: RolComponent },
+      { path: 'user', canActivate: [roleGuard], component: UserComponent },
+      { path: 'rol-user', canActivate: [roleGuard], component: RolUserComponent },
+      { path: 'module', canActivate: [roleGuard], component: ModuleComponent },
+      { path: 'interface', canActivate: [roleGuard], component: InterfacesComponent },
+      { path: 'lista-valores', canActivate: [roleGuard], component: ListaValoresComponent },
+      { path: 'lista-valores-detalle', canActivate: [roleGuard], component: ListaValoresDetalleComponent },
+      { path: 'tipo-campo', canActivate: [roleGuard], component: TipoCampoComponent },
+      { path: 'tipo-validacion', canActivate: [roleGuard], component: TipoValidacionComponent },
+      { path: 'interface-grupo-campos', canActivate: [roleGuard], component: InterfaceGrupoCamposComponent },
+      { path: 'campo', canActivate: [roleGuard], component: CampoComponent },
+      { path: 'campo-validacion', canActivate: [roleGuard], component: CampoValidacionComponent }
     ]
   },
   {
     path: 'app/operacion',
-    component: OperacionLayoutComponent,
-    children: [
-      {
-        path: '', canActivate: [roleGuard], component: AdminEmpresaHomeComponent, pathMatch: 'full'
-      },
-      { path: 'super-admin-home', component: SuperAdminHomeComponent }
-    ]
+    canActivate: [roleGuard],
+    component: OperacionLayoutComponent
   }
 ];
