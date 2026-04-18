@@ -14,24 +14,24 @@
 			<form [formGroup]="form">
 				<div class="row g-4">
 					<div class="col-12 col-md-6">
-						<label class="form-label">Modulo</label>
+						<label [appRequiredField]="''" class="form-label">Modulo</label>
 						<select class="form-select" formControlName="moduloId">
 							<option [ngValue]="null" disabled>Seleccione...</option>
 							<option *ngFor="let modulo of modulos" [ngValue]="modulo.id">{{ modulo.nombre }}</option>
 						</select>
 					</div>
 					<div class="col-12 col-md-6">
-						<label class="form-label">Nombre</label>
+						<label [appRequiredField]="''" class="form-label">Nombre</label>
 						<input type="text" class="form-control" formControlName="nombre"
 							placeholder="Ej: Registro Clientes">
 					</div>
 					<div class="col-12 col-md-8">
-						<label class="form-label">Descripcion</label>
+						<label [appRequiredField]="''" class="form-label">Descripcion</label>
 						<input type="text" class="form-control" formControlName="descripcion"
 							placeholder="Descripcion funcional">
 					</div>
 					<div class="col-12 col-md-4">
-						<label class="form-label">Indice</label>
+						<label [appRequiredField]="''" class="form-label">Indice</label>
 						<input type="number" class="form-control" formControlName="indice" min="0">
 					</div>
 					<div class="col-12">
@@ -45,24 +45,26 @@
 								<div class="col-6 col-md">
 									<small class="audit-label">Estado</small>
 									<div>
-										<span class="badge bg-success-subtle text-success">Activo</span>
+										<span class="badge" [ngClass]="estadoActual === 'Activo' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+											{{ estadoActual }}
+										</span>
 									</div>
 								</div>
 								<div class="col-6 col-md">
 									<small class="audit-label">Usuario Creación</small>
-									<div class="audit-value">{{ loggedUserName }}</div>
+									<div class="audit-value">{{ usuarioCreacion }}</div>
 								</div>
 								<div class="col-6 col-md">
 									<small class="audit-label">Fecha Creación</small>
-									<div class="audit-value">12/03/2024 08:30 AM</div>
+									<div class="audit-value">{{ fechaCreacion }}</div>
 								</div>
 								<div class="col-6 col-md">
 									<small class="audit-label">Usuario Actualización</small>
-									<div class="audit-value">-</div>
+									<div class="audit-value">{{ usuarioActualizacion }}</div>
 								</div>
 								<div class="col-6 col-md">
 									<small class="audit-label">Fecha Actualización</small>
-									<div class="audit-value">-</div>
+									<div class="audit-value">{{ fechaActualizacion }}</div>
 								</div>
 							</div>
 						</div>
@@ -71,6 +73,9 @@
 				<div class="d-flex justify-content-end gap-3 mt-4">
 					<button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
 						Cancelar
+					</button>
+					<button *ngIf="isEditMode" type="button" class="btn btn-outline-danger" (click)="deleteCurrentInterfaz()" [disabled]="saving">
+						Eliminar
 					</button>
 					<button type="button" class="btn btn-primary d-flex align-items-center gap-2"
 						(click)="submitInterfaz()" [disabled]="form.invalid || saving">
@@ -91,33 +96,38 @@
 						<th class="text-center align-middle">Descripcion</th>
 						<th class="text-center align-middle">Indice</th>
 						<th class="text-center align-middle">Estado</th>
+						<th class="text-center align-middle">Fecha Registro</th>
 						<th class="text-center align-middle">Acciones</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr *ngIf="loading">
-						<td colspan="6" class="text-center py-4 text-muted">Cargando interfaces...</td>
+						<td colspan="7" class="text-center py-4 text-muted">Cargando interfaces...</td>
 					</tr>
 					<tr *ngIf="!loading && errorMessage">
-						<td colspan="6" class="text-center py-4 text-danger">{{ errorMessage }}</td>
+						<td colspan="7" class="text-center py-4 text-danger">{{ errorMessage }}</td>
 					</tr>
 					<tr *ngIf="!loading && !errorMessage && interfaces.length === 0">
-						<td colspan="6" class="text-center py-4 text-muted">No hay interfaces registradas.</td>
+						<td colspan="7" class="text-center py-4 text-muted">No hay interfaces registradas.</td>
 					</tr>
 					<tr *ngFor="let item of interfaces">
 						<td>{{ item.modulo.nombre }}</td>
 						<td class="fw-semibold">{{ item.nombre }}</td>
 						<td>{{ item.descripcion }}</td>
-						<td>{{ item.indice }}</td>
+						<td class="text-center">{{ item.indice }}</td>
 						<td class="text-center">
 							<span class="badge"
 								[ngClass]="isActivo(item.estado) ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
 								{{ isActivo(item.estado) ? 'Activo' : 'Inactivo' }}
 							</span>
 						</td>
+						<td class="text-center">{{ formatDateTime(item.fechaCreacion) }}</td>
 						<td class="text-center">
 							<button type="button" class="btn btn-sm btn-icon text-primary" (click)="editInterfaz(item)">
 								<span class="material-symbols-outlined">edit</span>
+							</button>
+							<button type="button" class="btn btn-sm btn-icon text-danger" (click)="confirmDeleteInterfaz(item)">
+								<span class="material-symbols-outlined">delete</span>
 							</button>
 						</td>
 					</tr>

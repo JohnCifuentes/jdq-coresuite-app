@@ -18,11 +18,11 @@
       <form [formGroup]="form" (ngSubmit)="submitRol()">
         <div class="row g-3">
           <div class="col-12 col-md-6 col-lg-4">
-            <label class="form-label label-custom">Nombre del rol</label>
+            <label [appRequiredField]="''" class="form-label">Nombre del rol</label>
             <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: Administrador Maestro">
           </div>
           <div class="col-12 col-md-6 col-lg-8">
-            <label class="form-label label-custom">Descripción</label>
+            <label [appRequiredField]="''" class="form-label">Descripción</label>
             <input type="text" class="form-control" formControlName="descripcion"
               placeholder="Defina las responsabilidades de este rol...">
           </div>
@@ -37,30 +37,35 @@
             <div class="col-6 col-md">
               <small class="audit-label">Estado</small>
               <div>
-                <span class="badge bg-success-subtle text-success">Activo</span>
+                <span class="badge" [ngClass]="estadoActual === 'Activo' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                  {{ estadoActual }}
+                </span>
               </div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Usuario Creación</small>
-              <div class="audit-value">{{ loggedUserName }}</div>
+              <div class="audit-value">{{ usuarioCreacion }}</div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Fecha Creación</small>
-              <div class="audit-value">12/03/2024 08:30 AM</div>
+              <div class="audit-value">{{ fechaCreacion }}</div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Usuario Actualización</small>
-              <div class="audit-value">-</div>
+              <div class="audit-value">{{ usuarioActualizacion }}</div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Fecha Actualización</small>
-              <div class="audit-value">-</div>
+              <div class="audit-value">{{ fechaActualizacion }}</div>
             </div>
           </div>
         </div>
         <div class="d-flex justify-content-end gap-3 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="creating">
             Cancelar
+          </button>
+          <button *ngIf="isEditMode" type="button" class="btn btn-outline-danger" (click)="deleteCurrentRol()" [disabled]="creating">
+            Eliminar
           </button>
           <button type="submit" class="btn btn-primary px-4" [disabled]="form.invalid || creating">
             {{ isEditMode ? 'Actualizar' : 'Crear' }}
@@ -93,18 +98,19 @@
             <th class="text-center align-middle">Descripción</th>
             <th *ngIf="isSuperAdmin" class="text-center align-middle">Empresa</th>
             <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Fecha Registro</th>
             <th class="text-center align-middle">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading">
-            <td [attr.colspan]="isSuperAdmin ? 5 : 4" class="text-center py-4 text-muted">Cargando roles...</td>
+            <td [attr.colspan]="isSuperAdmin ? 6 : 5" class="text-center py-4 text-muted">Cargando roles...</td>
           </tr>
           <tr *ngIf="!loading && errorMessage">
-            <td [attr.colspan]="isSuperAdmin ? 5 : 4" class="text-center py-4 text-danger">{{ errorMessage }}</td>
+            <td [attr.colspan]="isSuperAdmin ? 6 : 5" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
           <tr *ngIf="!loading && !errorMessage && roles.length === 0">
-            <td [attr.colspan]="isSuperAdmin ? 5 : 4" class="text-center py-4 text-muted">
+            <td [attr.colspan]="isSuperAdmin ? 6 : 5" class="text-center py-4 text-muted">
               {{ isSuperAdmin ? 'No hay roles registrados en el sistema.' : 'No hay roles registrados para la empresa.' }}
             </td>
           </tr>
@@ -118,6 +124,7 @@
                 {{ isActivo(rol.estado) ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
+            <td class="text-center">{{ formatDateTime(rol.fechaCreacion) }}</td>
             <td class="text-center">
               <button class="btn btn-sm btn-icon text-primary" type="button" (click)="editRol(rol)">
                 <span class="material-symbols-outlined">edit</span>
@@ -134,25 +141,6 @@
       <small class="text-muted">
         Mostrando {{ roles.length }} roles {{ isSuperAdmin ? 'del sistema' : 'de la empresa' }}
       </small>
-      <nav>
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item disabled">
-            <button class="page-link">«</button>
-          </li>
-          <li class="page-item active">
-            <button class="page-link">1</button>
-          </li>
-          <li class="page-item">
-            <button class="page-link">2</button>
-          </li>
-          <li class="page-item">
-            <button class="page-link">3</button>
-          </li>
-          <li class="page-item">
-            <button class="page-link">»</button>
-          </li>
-        </ul>
-      </nav>
     </div>
   </div>
 </div>

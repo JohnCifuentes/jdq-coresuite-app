@@ -18,56 +18,63 @@
       <form [formGroup]="form" (ngSubmit)="submitUsuario()">
         <div class="row g-3">
           <div class="col-12 col-md-3">
-            <label class="form-label">Primer Nombre</label>
+            <label [appRequiredField]="''" class="form-label">Primer Nombre</label>
             <input type="text" class="form-control" formControlName="nombre1" placeholder="Ej. Juan">
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Segundo Nombre</label>
+            <label [appRequiredField]="''" class="form-label">Segundo Nombre</label>
             <input type="text" class="form-control" formControlName="nombre2" placeholder="Ej. Alberto">
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Primer Apellido</label>
+            <label [appRequiredField]="''" class="form-label">Primer Apellido</label>
             <input type="text" class="form-control" formControlName="apellido1" placeholder="Ej. Pérez">
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Segundo Apellido</label>
+            <label [appRequiredField]="''" class="form-label">Segundo Apellido</label>
             <input type="text" class="form-control" formControlName="apellido2" placeholder="Ej. Gómez">
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Tipo Identificación</label>
+            <label [appRequiredField]="''" class="form-label">Tipo Identificación</label>
             <select class="form-select" formControlName="tipoIdentificacionId">
               <option [ngValue]="null" disabled>Seleccione...</option>
               <option *ngFor="let tipo of tiposIdentificacion" [ngValue]="tipo.id">{{ tipo.nombre }}</option>
             </select>
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Número Identificación</label>
-            <input type="text" class="form-control" formControlName="numeroIdentificacion" placeholder="123456789">
+            <label [appRequiredField]="''" class="form-label">Número Identificación</label>
+            <input type="text" class="form-control" formControlName="numeroIdentificacion"
+              [placeholder]="numIdPlaceholder"
+              [attr.maxlength]="currentDocumentRule?.maxLength ?? 20"
+              (input)="onNumeroIdentificacionInput($event)">
+            <small *ngIf="numIdHint && !form.get('numeroIdentificacion')?.errors" class="text-muted">
+              {{ numIdHint }}
+            </small>
+            <div *ngIf="form.get('numeroIdentificacion')?.invalid && form.get('numeroIdentificacion')?.touched" class="text-danger small mt-1">
+              <span *ngIf="form.get('numeroIdentificacion')?.errors?.['required']">El número de identificación es obligatorio.</span>
+              <span *ngIf="form.get('numeroIdentificacion')?.errors?.['soloNumeros']">Solo se permiten números para este tipo de documento.</span>
+              <span *ngIf="form.get('numeroIdentificacion')?.errors?.['longitudInvalida']">
+                La longitud debe ser entre {{ form.get('numeroIdentificacion')?.errors?.['longitudInvalida']?.min }} y {{ form.get('numeroIdentificacion')?.errors?.['longitudInvalida']?.max }} caracteres.
+              </span>
+              <span *ngIf="form.get('numeroIdentificacion')?.errors?.['formatoInvalido']">Formato inválido para el tipo de documento seleccionado.</span>
+              <span *ngIf="form.get('numeroIdentificacion')?.errors?.['secuenciaRepetida']">El número no puede ser una secuencia repetida o consecutiva.</span>
+            </div>
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Correo Electrónico</label>
+            <label [appRequiredField]="''" class="form-label">Correo Electrónico</label>
             <input type="email" class="form-control" formControlName="correoElectronico"
               placeholder="usuario@empresa.com">
-            <small class="text-danger"
-              *ngIf="form.get('correoElectronico')?.touched && form.get('correoElectronico')?.hasError('required')">
-              El correo electrónico es obligatorio.
-            </small>
-            <small class="text-danger"
-              *ngIf="form.get('correoElectronico')?.touched && form.get('correoElectronico')?.hasError('email')">
-              Ingrese un correo electrónico con formato válido.
-            </small>
+            <div *ngIf="form.get('correoElectronico')?.invalid && form.get('correoElectronico')?.touched" class="text-danger small mt-1">
+              <span *ngIf="form.get('correoElectronico')?.errors?.['required']">El correo electrónico es obligatorio.</span>
+              <span *ngIf="form.get('correoElectronico')?.errors?.['pattern']">Ingrese un correo electrónico con formato válido (ej: usuario&#64;empresa.com).</span>
+            </div>
           </div>
           <div class="col-12 col-md-3">
-            <label class="form-label">Teléfono</label>
+            <label [appRequiredField]="''" class="form-label">Teléfono</label>
             <input type="tel" class="form-control" formControlName="telefono" placeholder="+57 300 000 0000">
-            <small class="text-danger"
-              *ngIf="form.get('telefono')?.touched && form.get('telefono')?.hasError('required')">
-              El teléfono es obligatorio.
-            </small>
-            <small class="text-danger"
-              *ngIf="form.get('telefono')?.touched && form.get('telefono')?.hasError('pattern')">
-              Ingrese un teléfono válido (10 dígitos, opcional prefijo +57).
-            </small>
+            <div *ngIf="form.get('telefono')?.invalid && form.get('telefono')?.touched" class="text-danger small mt-1">
+              <span *ngIf="form.get('telefono')?.errors?.['required']">El teléfono es obligatorio.</span>
+              <span *ngIf="form.get('telefono')?.errors?.['pattern']">Formato inválido; debe comenzar con +57 y contener 10 dígitos (ej: +57 300 000 0000).</span>
+            </div>
           </div>
         </div>
         <!-- AUDIT -->
@@ -80,16 +87,22 @@
             <div class="col-6 col-md">
               <small class="audit-label">Estado</small>
               <div>
-                <span class="badge bg-success-subtle text-success">Activo</span>
+                <span class="badge" [ngClass]="
+                    isActivo(estadoActual)
+                      ? 'bg-success-subtle text-success'
+                      : (isBloqueado(estadoActual) ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary')
+                  ">
+                  {{ getEstadoLabel(estadoActual) }}
+                </span>
               </div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Usuario Creación</small>
-              <div class="audit-value">{{ loggedUserName }}</div>
+              <div class="audit-value">{{ usuarioCreacion }}</div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Fecha Creación</small>
-              <div class="audit-value">12/03/2024 08:30 AM</div>
+              <div class="audit-value">{{ fechaCreacion }}</div>
             </div>
             <div class="col-6 col-md">
               <small class="audit-label">Usuario Actualización</small>
@@ -104,6 +117,9 @@
         <div class="d-flex justify-content-end gap-3 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
             Cancelar
+          </button>
+          <button *ngIf="isEditMode" type="button" class="btn btn-outline-danger" (click)="deleteCurrentUsuario()" [disabled]="saving">
+            Eliminar
           </button>
           <button type="submit" class="btn btn-primary px-4" [disabled]="form.invalid || saving">
             {{ isEditMode ? 'Actualizar' : 'Crear' }}
@@ -136,19 +152,20 @@
             <th class="text-center align-middle">Correo electrónico</th>
             <th class="text-center align-middle">Teléfono</th>
             <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Fecha Registro</th>
             <th class="text-center align-middle">Desbloquear</th>
             <th class="text-center align-middle">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading">
-            <td [attr.colspan]="isSuperAdmin ? 9 : 8" class="text-center py-4 text-muted">Cargando usuarios...</td>
+            <td [attr.colspan]="isSuperAdmin ? 10 : 9" class="text-center py-4 text-muted">Cargando usuarios...</td>
           </tr>
           <tr *ngIf="!loading && errorMessage">
-            <td [attr.colspan]="isSuperAdmin ? 9 : 8" class="text-center py-4 text-danger">{{ errorMessage }}</td>
+            <td [attr.colspan]="isSuperAdmin ? 10 : 9" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
           <tr *ngIf="!loading && !errorMessage && usuarios.length === 0">
-            <td [attr.colspan]="isSuperAdmin ? 9 : 8" class="text-center py-4 text-muted">
+            <td [attr.colspan]="isSuperAdmin ? 10 : 9" class="text-center py-4 text-muted">
               {{ isSuperAdmin ? 'No hay usuarios registrados en el sistema.' : 'No hay usuarios registrados para la
               empresa.' }}
             </td>
@@ -178,6 +195,7 @@
                 }}
               </span>
             </td>
+            <td class="text-center">{{ formatDateTime(usuario.fechaCreacion) }}</td>
             <td class="text-center">
               <button *ngIf="isBloqueado(usuario.estado)" class="btn btn-sm btn-icon text-success" type="button"
                 (click)="desbloquearUsuario(usuario)" title="Desbloquear usuario">
@@ -196,24 +214,10 @@
         </tbody>
       </table>
     </div>
-    <div class="card-footer d-flex justify-content-between align-items-center">
+    <div class="card-footer">
       <small class="text-muted">
         Mostrando {{ usuarios.length }} usuarios {{ isSuperAdmin ? 'del sistema' : 'de la empresa' }}
       </small>
-      <ul class="pagination pagination-sm mb-0">
-        <li class="page-item disabled">
-          <button class="page-link">«</button>
-        </li>
-        <li class="page-item active">
-          <button class="page-link">1</button>
-        </li>
-        <li class="page-item">
-          <button class="page-link">2</button>
-        </li>
-        <li class="page-item">
-          <button class="page-link">»</button>
-        </li>
-      </ul>
     </div>
   </div>
 </div>

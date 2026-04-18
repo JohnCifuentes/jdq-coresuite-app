@@ -4,11 +4,12 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AuthRoutingModule } from "../auth-routing.module";
 import { CodigoService } from '../../../services/seguridad/codigo.service';
 import { Router } from '@angular/router';
+import { RequiredFieldDirective } from '../../../core/directives/required-field.directive';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-forgot-password',
-  imports: [CommonModule, ReactiveFormsModule, AuthRoutingModule],
+  imports: [CommonModule, ReactiveFormsModule, AuthRoutingModule, RequiredFieldDirective],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.scss'
 })

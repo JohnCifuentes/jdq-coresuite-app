@@ -76,6 +76,7 @@ export interface UpdateCampoDTO {
   indice: number;
   columnas: number;
   valorDefecto: string | null;
+  estado?: string;
 }
 
 export interface ResponseCampoDTO {

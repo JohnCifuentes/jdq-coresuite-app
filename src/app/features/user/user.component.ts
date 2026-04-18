@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
   CreateUsuarioDTO,
@@ -12,14 +13,25 @@ import { UsuarioService } from '../../services/seguridad/usuario.service';
 import { TipoIdentificacionService } from '../../services/catalogo/tipo-identificacion.service';
 import { TipoIdentificacionDTO } from '../../models/catalogo/tipo-identificacion.models';
 import { LoginService, UserRole } from '../../services/seguridad/login.service';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import {
+  DocumentRule,
+  getDocumentRule,
+  documentFormatValidator,
+  noRepeatedSequenceValidator,
+  sanitiseDocumentInput,
+} from '../../core/utils/document-validation.util';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-user',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss'
 })
-export class UserComponent implements OnInit {
+export class UserComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
+
   usuarios: ResponseUsuarioDTO[] = [];
   tiposIdentificacion: TipoIdentificacionDTO[] = [];
   form: FormGroup;
@@ -27,12 +39,19 @@ export class UserComponent implements OnInit {
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
+  estadoActual = 'ACTIVO';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
   usuarioActualizacion = '-';
   fechaActualizacion = '-';
   empresaId: number | null = null;
   selectedUsuarioId: number | null = null;
   userRole: UserRole = 'OPERACION';
   isSuperAdmin = false;
+  currentDocumentRule: DocumentRule | null = null;
+  readonly formatDateTime = formatBackendDateTime;
+  numIdPlaceholder = 'Ej: 123456789';
+  numIdHint = '';
 
   constructor(
     private fb: FormBuilder,
@@ -47,13 +66,23 @@ export class UserComponent implements OnInit {
       nombre2: [''],
       apellido1: ['', Validators.required],
       apellido2: [''],
-      correoElectronico: ['', [Validators.required, Validators.email]],
-      telefono: ['', [Validators.required, Validators.pattern('^(\\+57)?[0-9]{10}$')]]
+      correoElectronico: ['', [Validators.required, Validators.pattern('^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$')]],
+      telefono: ['', [Validators.required, Validators.pattern('^\\+57\\s?\\d{3}\\s?\\d{3}\\s?\\d{4}$')]],
+      estado: [{ value: 'ACTIVO', disabled: true }],
+      usuarioCreacion: [{ value: '-', disabled: true }],
+      fechaCreacion: [{ value: '-', disabled: true }],
+      usuarioActualizacion: [{ value: '-', disabled: true }],
+      fechaActualizacion: [{ value: '-', disabled: true }]
     });
   }
 
   ngOnInit(): void {
     this.loadTiposIdentificacion();
+
+    this.form.get('tipoIdentificacionId')!.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((val) => this.onTipoIdentificacionChange(val));
+
     this.userRole = this.loginService.getRoleFromToken();
     this.isSuperAdmin = this.userRole === 'SUPER-ADMIN';
 
@@ -75,6 +104,8 @@ export class UserComponent implements OnInit {
         this.loggedUserName = user.correoElectronico;
       }
 
+      this.resetAuditInfo();
+
       const empresaId = user?.empresa?.id;
 
       if (!empresaId && !this.isSuperAdmin) {
@@ -94,8 +125,46 @@ export class UserComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   get isEditMode(): boolean {
     return this.selectedUsuarioId !== null;
+  }
+
+  private onTipoIdentificacionChange(tipoId: number | null): void {
+    const numIdCtrl = this.form.get('numeroIdentificacion')!;
+    numIdCtrl.reset('');
+    numIdCtrl.markAsUntouched();
+
+    if (!tipoId) {
+      this.currentDocumentRule = null;
+      this.numIdPlaceholder = 'Ej: 123456789';
+      this.numIdHint = '';
+      numIdCtrl.setValidators([Validators.required]);
+    } else {
+      const tipo = this.tiposIdentificacion.find((t) => t.id === Number(tipoId));
+      const rule = tipo ? getDocumentRule(tipo.codigo) : null;
+      this.currentDocumentRule = rule;
+      this.numIdPlaceholder = rule?.placeholder ?? 'Ej: 123456789';
+      this.numIdHint = rule?.hint ?? '';
+      numIdCtrl.setValidators([
+        Validators.required,
+        ...(rule ? [documentFormatValidator(rule)] : []),
+        noRepeatedSequenceValidator,
+      ]);
+    }
+
+    numIdCtrl.updateValueAndValidity();
+  }
+
+  onNumeroIdentificacionInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const sanitised = sanitiseDocumentInput(input.value, this.currentDocumentRule);
+    input.value = sanitised;
+    this.form.get('numeroIdentificacion')!.setValue(sanitised, { emitEvent: false });
   }
 
   submitUsuario(): void {
@@ -136,7 +205,7 @@ export class UserComponent implements OnInit {
           });
 
           this.resetForm();
-          this.loadUsuariosByEmpresa(this.empresaId!);
+          this.refreshUsuarios();
         } else {
           Swal.fire({
             icon: 'error',
@@ -146,12 +215,12 @@ export class UserComponent implements OnInit {
           });
         }
       },
-      error: () => {
+      error: (err: any) => {
         this.saving = false;
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible crear el usuario.',
+          text: err?.error?.contenido || err?.error?.message || 'No fue posible crear el usuario.',
           confirmButtonText: 'Aceptar'
         });
       }
@@ -160,8 +229,20 @@ export class UserComponent implements OnInit {
 
   editUsuario(usuario: ResponseUsuarioDTO): void {
     this.selectedUsuarioId = usuario.id;
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
+    this.setAuditInfoFromUsuario(usuario);
+
+    // Set document rule first (without resetting the number field)
+    const tipo = this.tiposIdentificacion.find((t) => t.id === usuario.tipoIdentificacion?.id);
+    const rule = tipo ? getDocumentRule(tipo.codigo) : null;
+    this.currentDocumentRule = rule;
+    this.numIdPlaceholder = rule?.placeholder ?? 'Ej: 123456789';
+    this.numIdHint = rule?.hint ?? '';
+    const numIdCtrl = this.form.get('numeroIdentificacion')!;
+    numIdCtrl.setValidators([
+      Validators.required,
+      ...(rule ? [documentFormatValidator(rule)] : []),
+      noRepeatedSequenceValidator,
+    ]);
 
     this.form.patchValue({
       tipoIdentificacionId: usuario.tipoIdentificacion?.id,
@@ -171,8 +252,15 @@ export class UserComponent implements OnInit {
       apellido1: usuario.apellido1,
       apellido2: usuario.apellido2,
       correoElectronico: usuario.correoElectronico,
-      telefono: usuario.telefono
-    });
+      telefono: usuario.telefono,
+      estado: this.getEstadoLabel(usuario.estado),
+      usuarioCreacion: usuario.usuarioCreacion || '-',
+      fechaCreacion: usuario.fechaCreacion || '-',
+      usuarioActualizacion: usuario.usuarioActualizacion || '-',
+      fechaActualizacion: usuario.fechaActualizacion || '-'
+    }, { emitEvent: false });
+
+    numIdCtrl.updateValueAndValidity();
   }
 
   async confirmDeleteUsuario(usuario: ResponseUsuarioDTO): Promise<void> {
@@ -192,6 +280,17 @@ export class UserComponent implements OnInit {
     this.inactiveUsuario(usuario.id);
   }
 
+  deleteCurrentUsuario(): void {
+    if (!this.selectedUsuarioId) {
+      return;
+    }
+
+    const usuario = this.usuarios.find((item) => item.id === this.selectedUsuarioId);
+    if (usuario) {
+      void this.confirmDeleteUsuario(usuario);
+    }
+  }
+
   resetForm(): void {
     this.form.reset({
       tipoIdentificacionId: this.tiposIdentificacion[0]?.id ?? null,
@@ -201,12 +300,19 @@ export class UserComponent implements OnInit {
       apellido1: '',
       apellido2: '',
       correoElectronico: '',
-      telefono: ''
+      telefono: '',
+      estado: 'ACTIVO',
+      usuarioCreacion: this.loggedUserName,
+      fechaCreacion: this.getCurrentDateTime(),
+      usuarioActualizacion: '-',
+      fechaActualizacion: '-'
     });
 
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
+    this.currentDocumentRule = null;
+    this.numIdPlaceholder = 'Ej: 123456789';
+    this.numIdHint = '';
     this.selectedUsuarioId = null;
+    this.resetAuditInfo();
   }
 
   isActivo(estado: string): boolean {
@@ -269,7 +375,7 @@ export class UserComponent implements OnInit {
             confirmButtonText: 'Aceptar'
           });
 
-          this.loadUsuariosByEmpresa(this.empresaId!);
+          this.refreshUsuarios();
         } else {
           Swal.fire({
             icon: 'error',
@@ -279,12 +385,12 @@ export class UserComponent implements OnInit {
           });
         }
       },
-      error: () => {
+      error: (err: any) => {
         this.saving = false;
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No fue posible actualizar el usuario.',
+          text: err?.error?.contenido || err?.error?.message || 'No fue posible actualizar el usuario.',
           confirmButtonText: 'Aceptar'
         });
       }
@@ -308,7 +414,7 @@ export class UserComponent implements OnInit {
             this.resetForm();
           }
 
-          this.loadUsuariosByEmpresa(this.empresaId!);
+          this.refreshUsuarios();
         } else {
           Swal.fire({
             icon: 'error',
@@ -372,11 +478,7 @@ export class UserComponent implements OnInit {
             confirmButtonText: 'Aceptar'
           });
 
-          if (this.isSuperAdmin) {
-            this.loadAllUsuarios();
-          } else if (this.empresaId) {
-            this.loadUsuariosByEmpresa(this.empresaId);
-          }
+          this.refreshUsuarios();
         } else {
           Swal.fire({
             icon: 'error',
@@ -395,6 +497,53 @@ export class UserComponent implements OnInit {
         });
       }
     });
+  }
+
+  private refreshUsuarios(): void {
+    if (this.isSuperAdmin) {
+      this.loadAllUsuarios();
+      return;
+    }
+
+    if (this.empresaId) {
+      this.loadUsuariosByEmpresa(this.empresaId);
+    }
+  }
+
+  private resetAuditInfo(): void {
+    this.estadoActual = 'ACTIVO';
+    this.usuarioCreacion = this.loggedUserName;
+    this.fechaCreacion = this.getCurrentDateTime();
+    this.usuarioActualizacion = '-';
+    this.fechaActualizacion = '-';
+
+    this.form.patchValue({
+      estado: 'Activo',
+      usuarioCreacion: this.usuarioCreacion,
+      fechaCreacion: this.fechaCreacion,
+      usuarioActualizacion: this.usuarioActualizacion,
+      fechaActualizacion: this.fechaActualizacion
+    }, { emitEvent: false });
+  }
+
+  private setAuditInfoFromUsuario(usuario: ResponseUsuarioDTO): void {
+    this.estadoActual = usuario.estado || 'ACTIVO';
+    this.usuarioCreacion = usuario.usuarioCreacion || '-';
+    this.fechaCreacion = usuario.fechaCreacion || '-';
+    this.usuarioActualizacion = usuario.usuarioActualizacion || '-';
+    this.fechaActualizacion = usuario.fechaActualizacion || '-';
+  }
+
+  getEstadoLabel(estado: string): string {
+    if (this.isActivo(estado)) {
+      return 'Activo';
+    }
+
+    if (this.isBloqueado(estado)) {
+      return 'Bloqueado';
+    }
+
+    return 'Inactivo';
   }
 
   private loadTiposIdentificacion(): void {

@@ -6,6 +6,7 @@ export interface CreateTipoValidacionDTO {
 export interface UpdateTipoValidacionDTO {
   nombre: string;
   descripcion: string;
+  estado?: string;
 }
 
 export interface ResponseTipoValidacionDTO {

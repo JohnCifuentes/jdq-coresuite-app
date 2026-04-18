@@ -87,7 +87,8 @@ export class UsuarioService {
   desbloquearUsuario(usuarioId: number): Observable<RespuestaDTO<ResponseUsuarioDTO>> {
     return this.http.put<RespuestaDTO<ResponseUsuarioDTO>>(
       `${this.apiUrl}/${usuarioId}/desbloquear/usuario`,
-      {}
+      {},
+      this.getAuthOptions()
     );
   }
 }

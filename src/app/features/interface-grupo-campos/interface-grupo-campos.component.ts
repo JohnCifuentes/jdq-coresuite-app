@@ -10,10 +10,13 @@ import {
 } from '../../models/operacion/interface-grupo-campos.models';
 import { InterfazService } from '../../services/operacion/interfaz.service';
 import { InterfaceGrupoCamposService } from '../../services/operacion/interface-grupo-campos.service';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByIndice } from '../../core/utils/admin-crud.util';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-interface-grupo-campos',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './interface-grupo-campos.component.html',
   styleUrl: './interface-grupo-campos.component.scss'
 })
@@ -26,6 +29,12 @@ export class InterfaceGrupoCamposComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedGrupoId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
@@ -60,6 +69,7 @@ export class InterfaceGrupoCamposComponent implements OnInit {
       }
     }
 
+    this.setAuditData();
     this.loadInterfaces();
     this.loadGruposCampos();
   }
@@ -125,6 +135,7 @@ export class InterfaceGrupoCamposComponent implements OnInit {
 
   editGrupoCampos(item: ResponseInterfaceGrupoCamposDTO): void {
     this.selectedGrupoId = item.id;
+    this.setAuditData(item);
 
     this.form.patchValue({
       interfazId: item.interfaz?.id ?? null,
@@ -132,6 +143,34 @@ export class InterfaceGrupoCamposComponent implements OnInit {
       descripcion: item.descripcion,
       indice: item.indice
     });
+  }
+
+  async confirmDeleteGrupoCampos(item: ResponseInterfaceGrupoCamposDTO): Promise<void> {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirmar acción',
+      text: `¿Está seguro de inactivar el grupo de campos ${item.nombre}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    this.inactiveGrupoCampos(item);
+  }
+
+  deleteCurrentGrupoCampos(): void {
+    if (!this.selectedGrupoId) {
+      return;
+    }
+
+    const item = this.gruposCampos.find((grupo) => grupo.id === this.selectedGrupoId);
+    if (item) {
+      void this.confirmDeleteGrupoCampos(item);
+    }
   }
 
   resetForm(): void {
@@ -142,6 +181,7 @@ export class InterfaceGrupoCamposComponent implements OnInit {
       indice: 0
     });
     this.selectedGrupoId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -196,10 +236,51 @@ export class InterfaceGrupoCamposComponent implements OnInit {
     });
   }
 
+  private inactiveGrupoCampos(item: ResponseInterfaceGrupoCamposDTO): void {
+    const payload: UpdateInterfaceGrupoCamposDTO = {
+      interfazId: item.interfaz?.id ?? Number(this.form.get('interfazId')?.value),
+      nombre: item.nombre,
+      descripcion: item.descripcion,
+      indice: item.indice,
+      estado: 'I'
+    };
+
+    this.interfaceGrupoCamposService.updateInterfaceGrupoCampos(item.id, payload).subscribe({
+      next: (response) => {
+        if (!response.error) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Operacion exitosa',
+            text: 'El grupo de campos fue inactivado correctamente.',
+            confirmButtonText: 'Aceptar'
+          });
+
+          this.resetForm();
+          this.loadGruposCampos();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No fue posible inactivar el grupo de campos.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No fue posible inactivar el grupo de campos.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    });
+  }
+
   private loadInterfaces(): void {
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
-        this.interfaces = response?.contenido ?? [];
+        this.interfaces = sortByIndice(response?.contenido ?? []);
       },
       error: () => {
         this.interfaces = [];
@@ -213,7 +294,7 @@ export class InterfaceGrupoCamposComponent implements OnInit {
 
     this.interfaceGrupoCamposService.getAllInterfaceGrupoCampos().subscribe({
       next: (response) => {
-        this.gruposCampos = response?.contenido ?? [];
+        this.gruposCampos = sortByIndice(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -222,4 +303,24 @@ export class InterfaceGrupoCamposComponent implements OnInit {
       }
     });
   }
+
+  private setAuditData(item?: ResponseInterfaceGrupoCamposDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
+  }
 }
+

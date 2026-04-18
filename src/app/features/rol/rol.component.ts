@@ -4,11 +4,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { CreateRolDTO, InactiveRolDTO, ResponseRolDTO, UpdateRolDTO } from '../../models/seguridad/rol.models';
 import { RolService } from '../../services/seguridad/rol.service';
 import { LoginService, UserRole } from '../../services/seguridad/login.service';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByNombre } from '../../core/utils/admin-crud.util';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-rol',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './rol.component.html',
   styleUrl: './rol.component.scss'
 })
@@ -21,8 +24,14 @@ export class RolComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedRolId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
   userRole: UserRole = 'OPERACION';
   isSuperAdmin = false;
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
@@ -65,6 +74,7 @@ export class RolComponent implements OnInit {
       }
 
       this.empresaId = empresaId ?? null;
+      this.setAuditData();
       this.refreshRoles();
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
@@ -131,6 +141,7 @@ export class RolComponent implements OnInit {
 
   editRol(rol: ResponseRolDTO): void {
     this.selectedRolId = rol.id;
+    this.setAuditData(rol);
     this.form.patchValue({
       nombre: rol.nombre,
       descripcion: rol.descripcion
@@ -154,13 +165,26 @@ export class RolComponent implements OnInit {
     this.inactiveRol(rol.id);
   }
 
+  deleteCurrentRol(): void {
+    if (!this.selectedRolId) {
+      return;
+    }
+
+    const rol = this.roles.find((item) => item.id === this.selectedRolId);
+    if (rol) {
+      void this.confirmDeleteRol(rol);
+    }
+  }
+
   resetForm(): void {
     this.form.reset();
     this.selectedRolId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
-    return estado?.toUpperCase() === 'ACTIVO';
+    const normalized = (estado ?? '').trim().toUpperCase();
+    return normalized === 'ACTIVO' || normalized === 'A';
   }
 
   private updateRol(): void {
@@ -254,7 +278,7 @@ export class RolComponent implements OnInit {
 
     this.rolService.getRolsByEmpresa(empresaId).subscribe({
       next: (response) => {
-        this.roles = response?.contenido ?? [];
+        this.roles = sortByNombre(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -270,7 +294,7 @@ export class RolComponent implements OnInit {
 
     this.rolService.getAllRoles().subscribe({
       next: (response) => {
-        this.roles = response?.contenido ?? [];
+        this.roles = sortByNombre(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -292,6 +316,25 @@ export class RolComponent implements OnInit {
     }
 
     this.loadRolesByEmpresa(this.empresaId);
+  }
+
+  private setAuditData(item?: ResponseRolDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
   }
 
 }

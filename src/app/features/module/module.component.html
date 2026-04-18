@@ -18,16 +18,16 @@
       <form [formGroup]="form">
         <div class="row g-4">
           <div class="col-12 col-md-6">
-            <label class="form-label label-custom">Nombre del Módulo</label>
+            <label [appRequiredField]="''" class="form-label">Nombre del Módulo</label>
             <input type="text" class="form-control" formControlName="nombre" placeholder="Ej: Facturación Electrónica">
           </div>
           <div class="col-12 col-md-6">
-            <label class="form-label label-custom">Descripción</label>
+            <label [appRequiredField]="''" class="form-label">Descripción</label>
             <input type="text" class="form-control" formControlName="descripcion"
               placeholder="Breve descripción de las funcionalidades principales">
           </div>
           <div class="col-12">
-            <label class="form-label label-custom">Índice</label>
+            <label [appRequiredField]="''" class="form-label">Índice</label>
             <input type="number" class="form-control" formControlName="indice" placeholder="0" min="0">
           </div>
           <!-- AUDIT -->
@@ -41,24 +41,26 @@
                 <div class="col-6 col-md">
                   <small class="audit-label">Estado</small>
                   <div>
-                    <span class="badge bg-success-subtle text-success">Activo</span>
+                    <span class="badge" [ngClass]="estadoActual === 'Activo' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                      {{ estadoActual }}
+                    </span>
                   </div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Usuario Creación</small>
-                  <div class="audit-value">{{ loggedUserName }}</div>
+                  <div class="audit-value">{{ usuarioCreacion }}</div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Fecha Creación</small>
-                  <div class="audit-value">12/03/2024 08:30 AM</div>
+                  <div class="audit-value">{{ fechaCreacion }}</div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Usuario Actualización</small>
-                  <div class="audit-value">-</div>
+                  <div class="audit-value">{{ usuarioActualizacion }}</div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Fecha Actualización</small>
-                  <div class="audit-value">-</div>
+                  <div class="audit-value">{{ fechaActualizacion }}</div>
                 </div>
               </div>
             </div>
@@ -67,6 +69,9 @@
         <div class="d-flex justify-content-end gap-3 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
             Cancelar
+          </button>
+          <button *ngIf="isEditMode" type="button" class="btn btn-outline-danger" (click)="deleteCurrentModulo()" [disabled]="saving">
+            Eliminar
           </button>
           <button type="button" class="btn btn-primary d-flex align-items-center gap-2" (click)="submitModulo()"
             [disabled]="form.invalid || saving">
@@ -123,7 +128,7 @@
             <td>
               {{ modulo.descripcion }}
             </td>
-            <td>
+            <td class="text-center">
               {{ getIndiceDisplay(modulo) }}
             </td>
             <td *ngIf="isSuperAdmin">{{ modulo.empresa.razonSocial || '-' }}</td>
@@ -133,13 +138,12 @@
                 {{ isActivo(modulo.estado) ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-            <td>{{ formatDateTime(modulo.fechaCreacion) }}</td>
+            <td class="text-center">{{ formatDateTime(modulo.fechaCreacion) }}</td>
             <td class="text-center">
               <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editModulo(modulo)">
                 <span class="material-symbols-outlined">edit</span>
               </button>
-              <button type="button" class="btn btn-sm btn-icon text-danger">
-                <!-- (click)="confirmDeleteModulo(modulo)"> -->
+              <button type="button" class="btn btn-sm btn-icon text-danger" (click)="confirmDeleteModulo(modulo)">
                 <span class="material-symbols-outlined">delete</span>
               </button>
             </td>

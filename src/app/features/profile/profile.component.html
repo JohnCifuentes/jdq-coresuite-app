@@ -1,0 +1,229 @@
+<div class="container-fluid usuario-container py-4">
+  <div class="mb-4">
+    <h2 class="fw-bold mb-1">Editar Perfil</h2>
+    <p class="text-muted mb-0">
+      Actualice la información personal, los datos básicos de la empresa y la licencia activa.
+    </p>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <form [formGroup]="form">
+        <div *ngIf="loading" class="text-center py-5 text-muted">
+          Cargando información del perfil...
+        </div>
+
+        <div *ngIf="!loading && errorMessage" class="alert alert-danger mb-0">
+          {{ errorMessage }}
+        </div>
+
+        <ng-container *ngIf="!loading && !errorMessage">
+          <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-3">
+            <span class="material-symbols-outlined text-primary">person</span>
+            <h5 class="mb-0 section-title">Datos del Usuario</h5>
+          </div>
+
+          <div formGroupName="usuario">
+            <div class="row g-3">
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Primer Nombre</label>
+                <input type="text" class="form-control" formControlName="nombre1" placeholder="Ej. Juan">
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="form-label">Segundo Nombre</label>
+                <input type="text" class="form-control" formControlName="nombre2" placeholder="Ej. Alberto">
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Primer Apellido</label>
+                <input type="text" class="form-control" formControlName="apellido1" placeholder="Ej. Pérez">
+              </div>
+              <div class="col-12 col-md-3">
+                <label class="form-label">Segundo Apellido</label>
+                <input type="text" class="form-control" formControlName="apellido2" placeholder="Ej. Gómez">
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Tipo Identificación</label>
+                <select class="form-select" formControlName="tipoIdentificacionId">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  <option *ngFor="let tipo of tiposIdentificacion" [ngValue]="tipo.id">{{ tipo.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Número Identificación</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="numeroIdentificacion"
+                  [placeholder]="usuarioNumIdPlaceholder"
+                  [attr.maxlength]="usuarioDocumentRule?.maxLength ?? 20"
+                  (input)="onUsuarioNumeroIdentificacionInput($event)">
+                <small *ngIf="usuarioNumIdHint && !usuarioGroup.get('numeroIdentificacion')?.errors" class="text-muted">
+                  {{ usuarioNumIdHint }}
+                </small>
+                <div *ngIf="usuarioGroup.get('numeroIdentificacion')?.invalid && usuarioGroup.get('numeroIdentificacion')?.touched" class="text-danger small mt-1">
+                  <span *ngIf="usuarioGroup.get('numeroIdentificacion')?.errors?.['required']">El número de identificación es obligatorio.</span>
+                  <span *ngIf="usuarioGroup.get('numeroIdentificacion')?.errors?.['soloNumeros']">Solo se permiten números para este tipo de documento.</span>
+                  <span *ngIf="usuarioGroup.get('numeroIdentificacion')?.errors?.['longitudInvalida']">La longitud del documento no es válida.</span>
+                  <span *ngIf="usuarioGroup.get('numeroIdentificacion')?.errors?.['formatoInvalido']">Formato inválido para el tipo de documento seleccionado.</span>
+                  <span *ngIf="usuarioGroup.get('numeroIdentificacion')?.errors?.['secuenciaRepetida']">El número no puede ser una secuencia repetida o consecutiva.</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" formControlName="correoElectronico" placeholder="usuario@empresa.com" readonly>
+                <div *ngIf="usuarioGroup.get('correoElectronico')?.invalid && usuarioGroup.get('correoElectronico')?.touched" class="text-danger small mt-1">
+                  <span *ngIf="usuarioGroup.get('correoElectronico')?.errors?.['required']">El correo electrónico es obligatorio.</span>
+                  <span *ngIf="usuarioGroup.get('correoElectronico')?.errors?.['pattern']">Ingrese un correo electrónico válido.</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Teléfono</label>
+                <input type="tel" class="form-control" formControlName="telefono" placeholder="+57 300 000 0000">
+                <div *ngIf="usuarioGroup.get('telefono')?.invalid && usuarioGroup.get('telefono')?.touched" class="text-danger small mt-1">
+                  <span *ngIf="usuarioGroup.get('telefono')?.errors?.['required']">El teléfono es obligatorio.</span>
+                  <span *ngIf="usuarioGroup.get('telefono')?.errors?.['pattern']">Formato inválido; debe comenzar con +57 y contener 10 dígitos.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+              <button type="button" class="btn btn-primary px-4" (click)="saveUsuario()" [disabled]="usuarioGroup.invalid || savingUser">
+                {{ savingUser ? 'Actualizando...' : 'Actualizar usuario' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 mt-5 mb-4 border-top pt-4 pb-1">
+            <span class="material-symbols-outlined text-primary">business</span>
+            <h5 class="mb-0 section-title">Datos de la Empresa</h5>
+          </div>
+
+          <div formGroupName="empresa">
+            <div class="row g-3">
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Tipo Identificación</label>
+                <select class="form-select" formControlName="tipoIdentificacionId">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  <option *ngFor="let tipo of tiposIdentificacion" [ngValue]="tipo.id">{{ tipo.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Número Identificación</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  formControlName="numeroIdentificacion"
+                  [placeholder]="empresaNumIdPlaceholder"
+                  [attr.maxlength]="empresaDocumentRule?.maxLength ?? 20"
+                  (input)="onEmpresaNumeroIdentificacionInput($event)">
+                <small *ngIf="empresaNumIdHint && !empresaGroup.get('numeroIdentificacion')?.errors" class="text-muted">
+                  {{ empresaNumIdHint }}
+                </small>
+                <div *ngIf="empresaGroup.get('numeroIdentificacion')?.invalid && empresaGroup.get('numeroIdentificacion')?.touched" class="text-danger small mt-1">
+                  <span *ngIf="empresaGroup.get('numeroIdentificacion')?.errors?.['required']">El número de identificación es obligatorio.</span>
+                  <span *ngIf="empresaGroup.get('numeroIdentificacion')?.errors?.['soloNumeros']">Solo se permiten números para este tipo de documento.</span>
+                  <span *ngIf="empresaGroup.get('numeroIdentificacion')?.errors?.['longitudInvalida']">La longitud del documento no es válida.</span>
+                  <span *ngIf="empresaGroup.get('numeroIdentificacion')?.errors?.['formatoInvalido']">Formato inválido para el tipo de documento seleccionado.</span>
+                  <span *ngIf="empresaGroup.get('numeroIdentificacion')?.errors?.['secuenciaRepetida']">El número no puede ser una secuencia repetida o consecutiva.</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <label [appRequiredField]="''" class="form-label">Razón Social</label>
+                <input type="text" class="form-control" formControlName="razonSocial" placeholder="Nombre de la empresa">
+              </div>
+              <div class="col-12 col-md-6">
+                <label [appRequiredField]="''" class="form-label">Dirección</label>
+                <input type="text" class="form-control" formControlName="direccion" placeholder="Dirección principal">
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Teléfono</label>
+                <input type="tel" class="form-control" formControlName="telefono" placeholder="+57 300 000 0000">
+                <div *ngIf="empresaGroup.get('telefono')?.invalid && empresaGroup.get('telefono')?.touched" class="text-danger small mt-1">
+                  <span *ngIf="empresaGroup.get('telefono')?.errors?.['required']">El teléfono es obligatorio.</span>
+                  <span *ngIf="empresaGroup.get('telefono')?.errors?.['pattern']">Formato inválido; debe comenzar con +57 y contener 10 dígitos.</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-3">
+                <label [appRequiredField]="''" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" formControlName="correoElectronico" placeholder="empresa@correo.com" readonly>
+                <div *ngIf="empresaGroup.get('correoElectronico')?.invalid && empresaGroup.get('correoElectronico')?.touched" class="text-danger small mt-1">
+                  <span *ngIf="empresaGroup.get('correoElectronico')?.errors?.['required']">El correo electrónico es obligatorio.</span>
+                  <span *ngIf="empresaGroup.get('correoElectronico')?.errors?.['pattern']">Ingrese un correo electrónico válido.</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-2">
+                <label [appRequiredField]="''" class="form-label">País</label>
+                <select class="form-select" formControlName="paisId">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  <option *ngFor="let pais of paises" [ngValue]="pais.id">{{ pais.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-2">
+                <label [appRequiredField]="''" class="form-label">Departamento</label>
+                <select class="form-select" formControlName="departamentoId">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  <option *ngFor="let departamento of departamentos" [ngValue]="departamento.id">{{ departamento.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-2">
+                <label [appRequiredField]="''" class="form-label">Municipio</label>
+                <select class="form-select" formControlName="municipioId">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  <option *ngFor="let municipio of municipios" [ngValue]="municipio.id">{{ municipio.nombre }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end align-items-center flex-wrap gap-3 mt-4">
+              <button type="button" class="btn btn-outline-danger" (click)="confirmDeactivateCompany()" [disabled]="deactivating">
+                {{ deactivating ? 'Inactivando...' : 'Inactivar cuenta' }}
+              </button>
+              <button type="button" class="btn btn-primary px-4" (click)="saveEmpresa()" [disabled]="empresaGroup.invalid || savingEmpresa">
+                {{ savingEmpresa ? 'Actualizando...' : 'Actualizar empresa' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 mt-5 mb-4 border-top pt-4 pb-1">
+            <span class="material-symbols-outlined text-primary">workspace_premium</span>
+            <h5 class="mb-0 section-title">Licencia Activa</h5>
+          </div>
+
+          <div formGroupName="licencia">
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label [appRequiredField]="''" class="form-label">Plan</label>
+                <select class="form-select" formControlName="planId">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  <option *ngFor="let plan of planes" [ngValue]="plan.id">{{ plan.nombre }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Fecha Expiración</label>
+                <input type="date" class="form-control" formControlName="fechaExpiracion" readonly>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label">Estado</label>
+                <div class="pt-2">
+                  <span class="badge" [ngClass]="getEstadoBadgeClass(licenciaGroup.get('estado')?.value)">
+                    {{ licenciaGroup.get('estado')?.value || '-' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!licenciaId" class="alert alert-warning mt-3 mb-0">
+              No se encontró una licencia activa asociada a la empresa.
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+              <button type="button" class="btn btn-primary px-4" (click)="saveLicencia()" [disabled]="licenciaGroup.invalid || savingLicencia || !licenciaId">
+                {{ savingLicencia ? 'Actualizando...' : 'Actualizar licencia' }}
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </form>
+    </div>
+  </div>
+</div>

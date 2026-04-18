@@ -10,10 +10,12 @@ import {
 import { ListaValoresService } from '../../services/operacion/lista-valores.service';
 import { LoginService, UserRole } from '../../services/seguridad/login.service';
 import { formatBackendDateTime } from '../../core/utils/date-time.util';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByNombre } from '../../core/utils/admin-crud.util';
 
 @Component({
   selector: 'app-lista-valores',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './lista-valores.component.html',
   styleUrl: './lista-valores.component.scss'
 })
@@ -26,6 +28,11 @@ export class ListaValoresComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedListaValoresId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
   userRole: UserRole = 'OPERACION';
   isSuperAdmin = false;
   readonly formatDateTime = formatBackendDateTime;
@@ -71,6 +78,7 @@ export class ListaValoresComponent implements OnInit {
       }
 
       this.empresaId = empresaId ?? null;
+      this.setAuditData();
       this.refreshListaValores();
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
@@ -137,6 +145,7 @@ export class ListaValoresComponent implements OnInit {
 
   editListaValores(item: ResponseListaValoresDTO): void {
     this.selectedListaValoresId = item.id;
+    this.setAuditData(item);
 
     this.form.patchValue({
       nombre: item.nombre,
@@ -161,12 +170,24 @@ export class ListaValoresComponent implements OnInit {
     this.inactiveListaValores(item);
   }
 
+  deleteCurrentListaValores(): void {
+    if (!this.selectedListaValoresId) {
+      return;
+    }
+
+    const item = this.listaValores.find((value) => value.id === this.selectedListaValoresId);
+    if (item) {
+      void this.confirmDeleteListaValores(item);
+    }
+  }
+
   resetForm(): void {
     this.form.reset({
       nombre: '',
       descripcion: ''
     });
     this.selectedListaValoresId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -274,7 +295,7 @@ export class ListaValoresComponent implements OnInit {
 
     this.listaValoresService.getListaValoresByEmpresa(empresaId).subscribe({
       next: (response) => {
-        this.listaValores = response?.contenido ?? [];
+        this.listaValores = sortByNombre(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -290,7 +311,7 @@ export class ListaValoresComponent implements OnInit {
 
     this.listaValoresService.getAllListaValores().subscribe({
       next: (response) => {
-        this.listaValores = response?.contenido ?? [];
+        this.listaValores = sortByNombre(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -312,5 +333,24 @@ export class ListaValoresComponent implements OnInit {
     }
 
     this.loadListaValoresByEmpresa(this.empresaId);
+  }
+
+  private setAuditData(item?: ResponseListaValoresDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
   }
 }

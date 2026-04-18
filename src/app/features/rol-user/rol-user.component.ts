@@ -15,6 +15,7 @@ import { RolService } from '../../services/seguridad/rol.service';
 import { ResponseUsuarioDTO } from '../../models/seguridad/usuario.models';
 import { ResponseRolDTO } from '../../models/seguridad/rol.models';
 import { formatBackendDateTime } from '../../core/utils/date-time.util';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByNombre } from '../../core/utils/admin-crud.util';
 
 @Component({
   selector: 'app-rol-user',
@@ -36,6 +37,9 @@ export class RolUserComponent implements OnInit {
   empresaId: number | null = null;
   selectedUsuarioId: number | null = null;
   selectedRolIds: Set<number> = new Set();
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
   usuarioActualizacion = '-';
   fechaActualizacion = '-';
   searchQuery = '';
@@ -79,6 +83,7 @@ export class RolUserComponent implements OnInit {
       }
 
       this.empresaId = empresaId;
+      this.setAuditData();
       this.loadDatos(empresaId);
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
@@ -103,8 +108,7 @@ export class RolUserComponent implements OnInit {
     this.selectedUsuarioId = usuario.id;
     this.form.patchValue({ usuarioId: usuario.id });
     this.selectedRolIds.clear();
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
+    this.setAuditData(usuario);
     this.usuariosFiltrados = [];
     this.searchQuery = '';
 
@@ -188,8 +192,6 @@ export class RolUserComponent implements OnInit {
       }
 
       this.saving = false;
-      this.usuarioActualizacion = this.loggedUserName;
-      this.fechaActualizacion = this.getCurrentDateTime();
 
       if (errores.length === 0) {
         Swal.fire({
@@ -259,8 +261,7 @@ export class RolUserComponent implements OnInit {
     }
 
     this.selectedUsuarioId = usuario.id;
-    this.usuarioActualizacion = asignacion.usuarioActualizacion || '-';
-    this.fechaActualizacion = asignacion.fechaActualizacion || '-';
+    this.setAuditData(asignacion);
     this.selectedRolIds.clear();
 
     // Load current roles for this user
@@ -323,8 +324,7 @@ export class RolUserComponent implements OnInit {
     this.form.reset();
     this.selectedUsuarioId = null;
     this.selectedRolIds.clear();
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
+    this.setAuditData();
     this.searchQuery = '';
     this.usuariosFiltrados = [];
   }
@@ -359,7 +359,7 @@ export class RolUserComponent implements OnInit {
     // Load usuarios
     this.usuarioService.getUsuariosByEmpresa(empresaId).subscribe({
       next: (response) => {
-        this.usuarios = response?.contenido ?? [];
+        this.usuarios = sortByNombre(response?.contenido ?? []);
       },
       error: () => {
         this.errorMessage = 'No fue posible cargar los usuarios registrados.';
@@ -369,7 +369,7 @@ export class RolUserComponent implements OnInit {
     // Load roles
     this.rolService.getRolsByEmpresa(empresaId).subscribe({
       next: (response) => {
-        this.rolesDisponibles = response?.contenido ?? [];
+        this.rolesDisponibles = sortByNombre(response?.contenido ?? []);
       },
       error: () => {
         this.errorMessage = 'No fue posible cargar los roles registrados.';
@@ -383,7 +383,12 @@ export class RolUserComponent implements OnInit {
   private loadAsignaciones(empresaId: number): void {
     this.rolUsuarioService.getRolUsuariosByEmpresa(empresaId).subscribe({
       next: (response: any) => {
-        this.asignacionesActuales = response?.contenido ?? response ?? [];
+        this.asignacionesActuales = [...(response?.contenido ?? response ?? [])].sort((left, right) => {
+          const leftUser = `${left.usuario?.nombre1 ?? ''} ${left.usuario?.apellido1 ?? ''}`.trim();
+          const rightUser = `${right.usuario?.nombre1 ?? ''} ${right.usuario?.apellido1 ?? ''}`.trim();
+          return leftUser.localeCompare(rightUser, 'es', { sensitivity: 'base' }) ||
+            (left.rol?.nombre ?? '').localeCompare(right.rol?.nombre ?? '', 'es', { sensitivity: 'base' });
+        });
         this.loading = false;
       },
       error: () => {
@@ -393,14 +398,22 @@ export class RolUserComponent implements OnInit {
     });
   }
 
-  private getCurrentDateTime(): string {
-    return new Intl.DateTimeFormat('es-CO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(new Date());
+  private setAuditData(item?: ResponseRolUsuarioDTO | ResponseUsuarioDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
   }
 }

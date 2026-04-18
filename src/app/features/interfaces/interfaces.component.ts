@@ -10,10 +10,13 @@ import {
 } from '../../models/operacion/interfaz.models';
 import { InterfazService } from '../../services/operacion/interfaz.service';
 import { ModuloService } from '../../services/operacion/modulo.service';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByIndice } from '../../core/utils/admin-crud.util';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-interfaces',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './interfaces.component.html',
   styleUrl: './interfaces.component.scss'
 })
@@ -27,6 +30,12 @@ export class InterfacesComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedInterfazId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
@@ -63,6 +72,7 @@ export class InterfacesComponent implements OnInit {
       }
     }
 
+    this.setAuditData();
     this.loadModulos();
     this.loadInterfaces();
   }
@@ -128,6 +138,7 @@ export class InterfacesComponent implements OnInit {
 
   editInterfaz(item: ResponseInterfazDTO): void {
     this.selectedInterfazId = item.id;
+    this.setAuditData(item);
 
     this.form.patchValue({
       moduloId: item.modulo?.id ?? null,
@@ -135,6 +146,34 @@ export class InterfacesComponent implements OnInit {
       descripcion: item.descripcion,
       indice: item.indice
     });
+  }
+
+  async confirmDeleteInterfaz(item: ResponseInterfazDTO): Promise<void> {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirmar acción',
+      text: `¿Está seguro de inactivar la interfaz ${item.nombre}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    this.inactiveInterfaz(item);
+  }
+
+  deleteCurrentInterfaz(): void {
+    if (!this.selectedInterfazId) {
+      return;
+    }
+
+    const item = this.interfaces.find((interfaz) => interfaz.id === this.selectedInterfazId);
+    if (item) {
+      void this.confirmDeleteInterfaz(item);
+    }
   }
 
   resetForm(): void {
@@ -145,6 +184,7 @@ export class InterfacesComponent implements OnInit {
       indice: 0
     });
     this.selectedInterfazId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -199,13 +239,54 @@ export class InterfacesComponent implements OnInit {
     });
   }
 
+  private inactiveInterfaz(item: ResponseInterfazDTO): void {
+    const payload: UpdateInterfazDTO = {
+      moduloId: item.modulo?.id ?? Number(this.form.get('moduloId')?.value),
+      nombre: item.nombre,
+      descripcion: item.descripcion,
+      indice: item.indice,
+      estado: 'I'
+    };
+
+    this.interfazService.updateInterfaz(item.id, payload).subscribe({
+      next: (response) => {
+        if (!response.error) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Operacion exitosa',
+            text: 'La interfaz fue inactivada correctamente.',
+            confirmButtonText: 'Aceptar'
+          });
+
+          this.resetForm();
+          this.loadInterfaces();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No fue posible inactivar la interfaz.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No fue posible inactivar la interfaz.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    });
+  }
+
   private loadInterfaces(): void {
     this.loading = true;
     this.errorMessage = null;
 
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
-        this.interfaces = response?.contenido ?? [];
+        this.interfaces = sortByIndice(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -222,12 +303,29 @@ export class InterfacesComponent implements OnInit {
 
     request$.subscribe({
       next: (response) => {
-        this.modulos = response?.contenido ?? [];
+        this.modulos = sortByIndice(response?.contenido ?? []);
       },
       error: () => {
         this.modulos = [];
       }
     });
   }
+  private setAuditData(item?: ResponseInterfazDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
 
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
+  }
 }

@@ -16,38 +16,56 @@
                     <form class="row g-4" [formGroup]="companyForm" (ngSubmit)="onSubmit()">
                         <!-- Razón Social -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Razón Social</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Razón Social</label>
                             <input type="text" class="form-control form-control-lg" placeholder="Nombre legal completo" formControlName="razonSocial">
                         </div>
                         <!-- Tipo ID + Número -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Tipo de Identificación</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Tipo de Identificación</label>
                             <select class="form-select form-select-lg" formControlName="tipoIdentificacion">
                                 <option value="">Seleccionar tipo</option>
                                 <option *ngFor="let tipo of tiposId" [value]="tipo.id">{{ tipo.nombre }}</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Número de Identificación</label>
-                            <input type="text" class="form-control form-control-lg" placeholder="Ej: 900.000.000-1" formControlName="numeroIdentificacion">
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Número de Identificación</label>
+                            <input
+                                type="text"
+                                class="form-control form-control-lg"
+                                [placeholder]="numIdPlaceholder"
+                                [attr.maxlength]="currentDocumentRule?.maxLength ?? 20"
+                                formControlName="numeroIdentificacion"
+                                (input)="onNumeroIdentificacionInput($event)">
+                            <small *ngIf="numIdHint && !companyForm.get('numeroIdentificacion')?.errors" class="text-muted">
+                                {{ numIdHint }}
+                            </small>
+                            <div *ngIf="companyForm.get('numeroIdentificacion')?.invalid && companyForm.get('numeroIdentificacion')?.touched" class="text-warning small mt-1">
+                                <span *ngIf="companyForm.get('numeroIdentificacion')?.errors?.['required']">El número de identificación es obligatorio.</span>
+                                <span *ngIf="companyForm.get('numeroIdentificacion')?.errors?.['soloNumeros']">Solo se permiten números para este tipo de documento.</span>
+                                <span *ngIf="companyForm.get('numeroIdentificacion')?.errors?.['longitudInvalida']">
+                                    La longitud debe ser entre {{ companyForm.get('numeroIdentificacion')?.errors?.['longitudInvalida']?.min }} y {{ companyForm.get('numeroIdentificacion')?.errors?.['longitudInvalida']?.max }} caracteres (actual: {{ companyForm.get('numeroIdentificacion')?.errors?.['longitudInvalida']?.actual }}).
+                                </span>
+                                <span *ngIf="companyForm.get('numeroIdentificacion')?.errors?.['formatoInvalido']">Formato inválido para el tipo de documento seleccionado.</span>
+                                <span *ngIf="companyForm.get('numeroIdentificacion')?.errors?.['secuenciaRepetida']">El número no puede ser una secuencia repetida o consecutiva.</span>
+                            </div>
                         </div>
                         <!-- Ubicación -->
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">País</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">País</label>
                             <select #paisSelect class="form-select form-select-lg" formControlName="pais" (change)="onPaisChange(paisSelect.value)">
                                 <option value="">Seleccionar país</option>
                                 <option *ngFor="let pais of paises" [value]="pais.id">{{ pais.nombre }}</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Departamento</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Departamento</label>
                             <select #deptSelect class="form-select form-select-lg" formControlName="departamento" (change)="onDepartamentoChange(deptSelect.value)">
                                 <option value="">Seleccionar departamento</option>
                                 <option *ngFor="let dept of departamentos" [value]="dept.id">{{ dept.nombre }}</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Municipio</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Municipio</label>
                             <select class="form-select form-select-lg" formControlName="municipio">
                                 <option value="">Seleccionar municipio</option>
                                 <option *ngFor="let mun of municipios" [value]="mun.id">{{ mun.nombre }}</option>
@@ -55,32 +73,47 @@
                         </div>
                         <!-- Dirección -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Dirección</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Dirección</label>
                             <input type="text" class="form-control form-control-lg" placeholder="Dirección de la oficina principal" formControlName="direccion">
                         </div>
                         <!-- Contacto -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Correo Electrónico Corporativo</label>
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Correo Electrónico Corporativo</label>
                             <input type="email" class="form-control form-control-lg" placeholder="admin@empresa.com" formControlName="correo">
                             <div *ngIf="companyForm.get('correo')?.invalid && companyForm.get('correo')?.touched" class="text-warning small mt-1">
                                 <span *ngIf="companyForm.get('correo')?.errors?.['required']">El correo es obligatorio.</span>
-                                <span *ngIf="companyForm.get('correo')?.errors?.['email']">Formato de correo inválido.</span>
+                                <span *ngIf="companyForm.get('correo')?.errors?.['pattern']">Formato de correo inválido.</span>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Teléfono</label>
-                            <input type="tel" class="form-control form-control-lg" placeholder="+00 000 0000" formControlName="telefono">
+                            <label [appRequiredField]="''" class="form-label fw-semibold">Teléfono</label>
+                            <input type="tel" class="form-control form-control-lg" placeholder="+00 000 000 0000" formControlName="telefono">
                             <div *ngIf="companyForm.get('telefono')?.invalid && companyForm.get('telefono')?.touched" class="text-warning small mt-1">
                                 <span *ngIf="companyForm.get('telefono')?.errors?.['required']">El teléfono es obligatorio.</span>
-                                <span *ngIf="companyForm.get('telefono')?.errors?.['pattern']">Formato de teléfono inválido; debe comenzar con +57 y contener 7‑10 dígitos.</span>
+                                <span *ngIf="companyForm.get('telefono')?.errors?.['pattern']">Formato de teléfono inválido; debe comenzar con +57 y contener 10 dígitos.</span>
+                            </div>
+                        </div>
+                        <!-- Política de Datos -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="aceptaTerminos" [(ngModel)]="aceptaTerminos" [ngModelOptions]="{standalone: true}">
+                                <label class="form-check-label small" for="aceptaTerminos">
+                                    Declaro que he leído y acepto la
+                                    <a href="javascript:void(0)" class="text-primary fw-semibold" (click)="openPolicyModal()">
+                                        Política de Tratamiento de Datos Personales
+                                    </a>.
+                                </label>
                             </div>
                         </div>
                         <!-- Botón -->
                         <div class="col-12 pt-3">
-                            <button type="submit" [disabled]="!companyForm.valid"
+                            <button type="submit" [disabled]="!companyForm.valid || isSubmitting || !aceptaTerminos"
                                 class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2">
-                                <span>Finalizar Registro</span>
-                                <span class="material-symbols-outlined">arrow_forward</span>
+                                <span *ngIf="!isSubmitting">Finalizar Registro</span>
+                                <span *ngIf="isSubmitting" class="d-flex align-items-center gap-2">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    Procesando...
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -136,3 +169,6 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Política de Datos -->
+<app-policy-modal [visible]="showPolicyModal" (closed)="closePolicyModal()"></app-policy-modal>

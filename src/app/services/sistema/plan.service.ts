@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -15,26 +15,40 @@ import { RespuestaDTO } from '../../models/response.dto';
 })
 export class PlanService {
   private apiUrl = `${environment.apiBaseUrl}/api/sistema/plan`;
+  private storageKey = 'auth_token';
 
   constructor(private http: HttpClient) {}
 
+  private getAuthOptions() {
+    const token = localStorage.getItem(this.storageKey);
+    if (!token) {
+      return {};
+    }
+
+    return {
+      headers: new HttpHeaders({
+        Authorization: `Bearer ${token}`
+      })
+    };
+  }
+
   createPlan(createPlanDTO: CreatePlanDTO): Observable<RespuestaDTO<ResponsePlanDTO>> {
-    return this.http.post<RespuestaDTO<ResponsePlanDTO>>(this.apiUrl, createPlanDTO);
+    return this.http.post<RespuestaDTO<ResponsePlanDTO>>(this.apiUrl, createPlanDTO, this.getAuthOptions());
   }
 
   updatePlan(id: number, updatePlanDTO: UpdatePlanDTO): Observable<RespuestaDTO<ResponsePlanDTO>> {
-    return this.http.put<RespuestaDTO<ResponsePlanDTO>>(`${this.apiUrl}/${id}`, updatePlanDTO);
+    return this.http.put<RespuestaDTO<ResponsePlanDTO>>(`${this.apiUrl}/${id}`, updatePlanDTO, this.getAuthOptions());
   }
 
   inactivePlan(id: number, inactivePlanDTO: InactivePlanDTO): Observable<RespuestaDTO<ResponsePlanDTO>> {
-    return this.http.put<RespuestaDTO<ResponsePlanDTO>>(`${this.apiUrl}/${id}/inactive`, inactivePlanDTO);
+    return this.http.put<RespuestaDTO<ResponsePlanDTO>>(`${this.apiUrl}/${id}/inactive`, inactivePlanDTO, this.getAuthOptions());
   }
 
   getAllPlanes(): Observable<RespuestaDTO<ResponsePlanDTO[]>> {
-    return this.http.get<RespuestaDTO<ResponsePlanDTO[]>>(this.apiUrl);
+    return this.http.get<RespuestaDTO<ResponsePlanDTO[]>>(this.apiUrl, this.getAuthOptions());
   }
 
   getPlanById(id: number): Observable<RespuestaDTO<ResponsePlanDTO>> {
-    return this.http.get<RespuestaDTO<ResponsePlanDTO>>(`${this.apiUrl}/${id}`);
+    return this.http.get<RespuestaDTO<ResponsePlanDTO>>(`${this.apiUrl}/${id}`, this.getAuthOptions());
   }
 }

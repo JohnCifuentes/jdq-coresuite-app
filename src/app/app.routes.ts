@@ -26,6 +26,8 @@ import { InterfaceGrupoCamposComponent } from './features/interface-grupo-campos
 import { CampoComponent } from './features/campo/campo.component';
 import { CampoValidacionComponent } from './features/campo-validacion/campo-validacion.component';
 import { OperacionLayoutComponent } from './layouts/operacion-layout/operacion-layout.component';
+import { OperacionDinamicaComponent } from './features/operacion-dinamica/operacion-dinamica.component';
+import { ProfileComponent } from './features/profile/profile.component';
 
 export const routes: Routes = [
   {
@@ -57,6 +59,7 @@ export const routes: Routes = [
       { path: 'admin-empresa-home', canActivate: [roleGuard], component: AdminEmpresaHomeComponent },
       { path: 'rol', canActivate: [roleGuard], component: RolComponent },
       { path: 'user', canActivate: [roleGuard], component: UserComponent },
+      { path: 'profile', canActivate: [roleGuard], component: ProfileComponent },
       { path: 'rol-user', canActivate: [roleGuard], component: RolUserComponent },
       { path: 'module', canActivate: [roleGuard], component: ModuleComponent },
       { path: 'interface', canActivate: [roleGuard], component: InterfacesComponent },
@@ -72,6 +75,9 @@ export const routes: Routes = [
   {
     path: 'app/operacion',
     canActivate: [roleGuard],
-    component: OperacionLayoutComponent
+    component: OperacionLayoutComponent,
+    children: [
+      { path: ':interfazId', component: OperacionDinamicaComponent }
+    ]
   }
 ];

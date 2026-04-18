@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { HeaderOperacionComponent } from './header-operacion/header-operacion.component';
 import { SidebarOperacionComponent } from './sidebar-operacion/sidebar-operacion.component';
 
@@ -12,4 +12,5 @@ import { SidebarOperacionComponent } from './sidebar-operacion/sidebar-operacion
   styleUrl: './operacion-layout.component.scss'
 })
 export class OperacionLayoutComponent {
+  constructor(public router: Router) {}
 }

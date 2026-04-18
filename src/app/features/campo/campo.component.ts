@@ -12,10 +12,13 @@ import { InterfaceGrupoCamposService } from '../../services/operacion/interface-
 import { TipoCampoService } from '../../services/operacion/tipo-campo.service';
 import { ListaValoresService } from '../../services/operacion/lista-valores.service';
 import { CampoService } from '../../services/operacion/campo.service';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByIndice, sortByNombre } from '../../core/utils/admin-crud.util';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-campo',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './campo.component.html',
   styleUrl: './campo.component.scss'
 })
@@ -31,6 +34,12 @@ export class CampoComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedCampoId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
+  readonly formatDateTime = formatBackendDateTime;
   private tiposConListaValores = new Set(['SELECT', 'RADIO', 'CHECKBOX']);
 
   constructor(
@@ -75,6 +84,7 @@ export class CampoComponent implements OnInit {
       }
     }
 
+    this.setAuditData();
     this.loadCatalogos();
     this.setupConditionalValidators();
     this.loadCampos();
@@ -149,6 +159,7 @@ export class CampoComponent implements OnInit {
 
   editCampo(item: ResponseCampoDTO): void {
     this.selectedCampoId = item.id;
+    this.setAuditData(item);
 
     this.form.patchValue({
       interfazId: item.interfaz?.id ?? null,
@@ -162,6 +173,34 @@ export class CampoComponent implements OnInit {
       columnas: item.columnas,
       valorDefecto: item.valorDefecto ?? ''
     });
+  }
+
+  async confirmDeleteCampo(item: ResponseCampoDTO): Promise<void> {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirmar acción',
+      text: `¿Está seguro de inactivar el campo ${item.nombre}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    this.inactiveCampo(item);
+  }
+
+  deleteCurrentCampo(): void {
+    if (!this.selectedCampoId) {
+      return;
+    }
+
+    const item = this.campos.find((campo) => campo.id === this.selectedCampoId);
+    if (item) {
+      void this.confirmDeleteCampo(item);
+    }
   }
 
   resetForm(): void {
@@ -178,6 +217,7 @@ export class CampoComponent implements OnInit {
       valorDefecto: ''
     });
     this.selectedCampoId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -240,10 +280,57 @@ export class CampoComponent implements OnInit {
     });
   }
 
+  private inactiveCampo(item: ResponseCampoDTO): void {
+    const payload: UpdateCampoDTO = {
+      interfazId: item.interfaz?.id ?? Number(this.form.get('interfazId')?.value),
+      interfaceGrupoCamposId: item.interfaceGrupoCampos?.id ?? Number(this.form.get('interfaceGrupoCamposId')?.value),
+      tipoCampoId: item.tipoCampo?.id ?? Number(this.form.get('tipoCampoId')?.value),
+      listaValoresId: item.listaValores?.id ?? null,
+      nombre: item.nombre,
+      etiqueta: item.etiqueta,
+      descripcion: item.descripcion,
+      indice: item.indice,
+      columnas: item.columnas,
+      valorDefecto: this.normalizeOptionalText(item.valorDefecto),
+      estado: 'I'
+    };
+
+    this.campoService.updateCampo(item.id, payload).subscribe({
+      next: (response) => {
+        if (!response.error) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Operacion exitosa',
+            text: 'El campo fue inactivado correctamente.',
+            confirmButtonText: 'Aceptar'
+          });
+
+          this.resetForm();
+          this.loadCampos();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No fue posible inactivar el campo.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No fue posible inactivar el campo.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    });
+  }
+
   private loadCatalogos(): void {
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
-        this.interfaces = response?.contenido ?? [];
+        this.interfaces = sortByIndice(response?.contenido ?? []);
       },
       error: () => {
         this.interfaces = [];
@@ -252,7 +339,7 @@ export class CampoComponent implements OnInit {
 
     this.interfaceGrupoCamposService.getAllInterfaceGrupoCampos().subscribe({
       next: (response) => {
-        this.gruposCampos = response?.contenido ?? [];
+        this.gruposCampos = sortByIndice(response?.contenido ?? []);
       },
       error: () => {
         this.gruposCampos = [];
@@ -261,7 +348,7 @@ export class CampoComponent implements OnInit {
 
     this.tipoCampoService.getAllTipoCampos().subscribe({
       next: (response) => {
-        this.tiposCampo = response?.contenido ?? [];
+        this.tiposCampo = sortByNombre(response?.contenido ?? []);
       },
       error: () => {
         this.tiposCampo = [];
@@ -270,7 +357,7 @@ export class CampoComponent implements OnInit {
 
     this.listaValoresService.getAllListaValores().subscribe({
       next: (response) => {
-        this.listasValores = response?.contenido ?? [];
+        this.listasValores = sortByNombre(response?.contenido ?? []);
       },
       error: () => {
         this.listasValores = [];
@@ -284,7 +371,7 @@ export class CampoComponent implements OnInit {
 
     this.campoService.getAllCampos().subscribe({
       next: (response) => {
-        this.campos = response?.contenido ?? [];
+        this.campos = sortByIndice(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -329,5 +416,24 @@ export class CampoComponent implements OnInit {
   private normalizeOptionalText(value: unknown): string | null {
     const normalized = typeof value === 'string' ? value.trim() : '';
     return normalized.length > 0 ? normalized : null;
+  }
+
+  private setAuditData(item?: ResponseCampoDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
   }
 }

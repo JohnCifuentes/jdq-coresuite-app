@@ -14,7 +14,7 @@
       <form [formGroup]="form">
         <div class="row g-4">
           <div class="col-12 col-md-4">
-            <label class="form-label">Campo</label>
+            <label [appRequiredField]="''" class="form-label">Campo</label>
             <select class="form-select" formControlName="campoId">
               <option [ngValue]="null" disabled>Seleccione...</option>
               <option *ngFor="let item of campos" [ngValue]="item.id">{{ item.nombre }}</option>
@@ -22,7 +22,7 @@
           </div>
 
           <div class="col-12 col-md-4">
-            <label class="form-label">Tipo de validacion</label>
+            <label [appRequiredField]="''" class="form-label">Tipo de validacion</label>
             <select class="form-select" formControlName="tipoValidacionId">
               <option [ngValue]="null" disabled>Seleccione...</option>
               <option *ngFor="let item of tiposValidacion" [ngValue]="item.id">{{ item.nombre }}</option>
@@ -30,7 +30,7 @@
           </div>
 
           <div class="col-12 col-md-4">
-            <label class="form-label">Campo referencia</label>
+            <label [appRequiredField]="''" class="form-label">Campo referencia</label>
             <select class="form-select" formControlName="campoReferenciaId">
               <option [ngValue]="null" disabled>Seleccione...</option>
               <option *ngFor="let item of campos" [ngValue]="item.id">{{ item.nombre }}</option>
@@ -38,7 +38,7 @@
           </div>
 
           <div class="col-12">
-            <label class="form-label">Valor</label>
+            <label [appRequiredField]="''" class="form-label">Valor</label>
             <input type="text" class="form-control" formControlName="valor"
               placeholder="Expresion o valor de validacion">
           </div>
@@ -53,24 +53,26 @@
                 <div class="col-6 col-md">
                   <small class="audit-label">Estado</small>
                   <div>
-                    <span class="badge bg-success-subtle text-success">Activo</span>
+                    <span class="badge" [ngClass]="estadoActual === 'Activo' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'">
+                      {{ estadoActual }}
+                    </span>
                   </div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Usuario Creación</small>
-                  <div class="audit-value">{{ loggedUserName }}</div>
+                  <div class="audit-value">{{ usuarioCreacion }}</div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Fecha Creación</small>
-                  <div class="audit-value">12/03/2024 08:30 AM</div>
+                  <div class="audit-value">{{ fechaCreacion }}</div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Usuario Actualización</small>
-                  <div class="audit-value">-</div>
+                  <div class="audit-value">{{ usuarioActualizacion }}</div>
                 </div>
                 <div class="col-6 col-md">
                   <small class="audit-label">Fecha Actualización</small>
-                  <div class="audit-value">-</div>
+                  <div class="audit-value">{{ fechaActualizacion }}</div>
                 </div>
               </div>
             </div>
@@ -79,6 +81,9 @@
         <div class="d-flex justify-content-end gap-3 mt-4">
           <button type="button" class="btn btn-outline-secondary" (click)="resetForm()" [disabled]="saving">
             Cancelar
+          </button>
+          <button *ngIf="isEditMode" type="button" class="btn btn-outline-danger" (click)="deleteCurrentCampoValidacion()" [disabled]="saving">
+            Eliminar
           </button>
           <button type="button" class="btn btn-primary d-flex align-items-center gap-2"
             (click)="submitCampoValidacion()" [disabled]="form.invalid || saving">
@@ -99,18 +104,19 @@
             <th class="text-center align-middle">Valor</th>
             <th class="text-center align-middle">Campo referencia</th>
             <th class="text-center align-middle">Estado</th>
+            <th class="text-center align-middle">Fecha Registro</th>
             <th class="text-center align-middle">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="loading">
-            <td colspan="6" class="text-center py-4 text-muted">Cargando validaciones de campo...</td>
+            <td colspan="7" class="text-center py-4 text-muted">Cargando validaciones de campo...</td>
           </tr>
           <tr *ngIf="!loading && errorMessage">
-            <td colspan="6" class="text-center py-4 text-danger">{{ errorMessage }}</td>
+            <td colspan="7" class="text-center py-4 text-danger">{{ errorMessage }}</td>
           </tr>
           <tr *ngIf="!loading && !errorMessage && campoValidaciones.length === 0">
-            <td colspan="6" class="text-center py-4 text-muted">No hay validaciones de campo registradas.</td>
+            <td colspan="7" class="text-center py-4 text-muted">No hay validaciones de campo registradas.</td>
           </tr>
           <tr *ngFor="let item of campoValidaciones">
             <td>{{ item.campo.nombre }}</td>
@@ -123,9 +129,13 @@
                 {{ isActivo(item.estado) ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
+            <td class="text-center">{{ formatDateTime(item.fechaCreacion) }}</td>
             <td class="text-center">
               <button type="button" class="btn btn-sm btn-icon text-primary" (click)="editCampoValidacion(item)">
                 <span class="material-symbols-outlined">edit</span>
+              </button>
+              <button type="button" class="btn btn-sm btn-icon text-danger" (click)="confirmDeleteCampoValidacion(item)">
+                <span class="material-symbols-outlined">delete</span>
               </button>
             </td>
           </tr>

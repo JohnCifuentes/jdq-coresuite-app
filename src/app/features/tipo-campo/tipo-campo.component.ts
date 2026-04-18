@@ -9,10 +9,12 @@ import {
 } from '../../models/operacion/tipo-campo.models';
 import { TipoCampoService } from '../../services/operacion/tipo-campo.service';
 import { formatBackendDateTime } from '../../core/utils/date-time.util';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByNombre } from '../../core/utils/admin-crud.util';
 
 @Component({
   selector: 'app-tipo-campo',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './tipo-campo.component.html',
   styleUrl: './tipo-campo.component.scss'
 })
@@ -24,6 +26,11 @@ export class TipoCampoComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedTipoCampoId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
   readonly formatDateTime = formatBackendDateTime;
 
   constructor(
@@ -56,6 +63,7 @@ export class TipoCampoComponent implements OnInit {
       }
     }
 
+    this.setAuditData();
     this.loadTipoCampos();
   }
 
@@ -118,6 +126,7 @@ export class TipoCampoComponent implements OnInit {
 
   editTipoCampo(item: ResponseTipoCampoDTO): void {
     this.selectedTipoCampoId = item.id;
+    this.setAuditData(item);
 
     this.form.patchValue({
       nombre: item.nombre,
@@ -142,12 +151,24 @@ export class TipoCampoComponent implements OnInit {
     this.inactiveTipoCampo(item);
   }
 
+  deleteCurrentTipoCampo(): void {
+    if (!this.selectedTipoCampoId) {
+      return;
+    }
+
+    const item = this.tipoCampos.find((value) => value.id === this.selectedTipoCampoId);
+    if (item) {
+      void this.confirmDeleteTipoCampo(item);
+    }
+  }
+
   resetForm(): void {
     this.form.reset({
       nombre: '',
       descripcion: ''
     });
     this.selectedTipoCampoId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -249,7 +270,7 @@ export class TipoCampoComponent implements OnInit {
 
     this.tipoCampoService.getAllTipoCampos().subscribe({
       next: (response) => {
-        this.tipoCampos = response?.contenido ?? [];
+        this.tipoCampos = sortByNombre(response?.contenido ?? []);
         this.loading = false;
       },
       error: () => {
@@ -258,4 +279,24 @@ export class TipoCampoComponent implements OnInit {
       }
     });
   }
+
+  private setAuditData(item?: ResponseTipoCampoDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
+  }
 }
+

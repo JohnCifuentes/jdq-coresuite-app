@@ -3,14 +3,15 @@
     <div class="d-flex flex-grow-1 overflow-hidden">
         <app-sidebar-operacion class="sidebar"></app-sidebar-operacion>
         <main class="flex-grow-1 p-4 bg-light overflow-auto">
-            <section class="operacion-layout card border-0 shadow-sm">
+            <section *ngIf="router.url === '/app/operacion'" class="operacion-layout card border-0 shadow-sm">
                 <div class="card-body p-4 p-md-5">
                     <h2 class="fw-bold mb-3">Panel de Operacion</h2>
                     <p class="text-muted mb-0">
-                        Bienvenido. Este espacio estara disponible para los usuarios con rol de operacion.
+                        Bienvenido. Selecciona una interfaz del menú lateral para cargar la pantalla dinámica.
                     </p>
                 </div>
             </section>
+            <router-outlet></router-outlet>
         </main>
     </div>
 </div>

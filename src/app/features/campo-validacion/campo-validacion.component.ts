@@ -12,10 +12,13 @@ import { ResponseTipoValidacionDTO } from '../../models/operacion/tipo-validacio
 import { CampoService } from '../../services/operacion/campo.service';
 import { CampoValidacionService } from '../../services/operacion/campo-validacion.service';
 import { TipoValidacionService } from '../../services/operacion/tipo-validacion.service';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByIndice, sortByNombre } from '../../core/utils/admin-crud.util';
+import { formatBackendDateTime } from '../../core/utils/date-time.util';
 
 @Component({
   selector: 'app-campo-validacion',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './campo-validacion.component.html',
   styleUrl: './campo-validacion.component.scss'
 })
@@ -29,6 +32,12 @@ export class CampoValidacionComponent implements OnInit {
   errorMessage: string | null = null;
   loggedUserName = '-';
   selectedCampoValidacionId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
+  usuarioActualizacion = '-';
+  fechaActualizacion = '-';
+  readonly formatDateTime = formatBackendDateTime;
 
   constructor(
     private fb: FormBuilder,
@@ -64,6 +73,7 @@ export class CampoValidacionComponent implements OnInit {
       }
     }
 
+    this.setAuditData();
     this.loadCatalogos();
     this.loadCampoValidaciones();
   }
@@ -129,6 +139,7 @@ export class CampoValidacionComponent implements OnInit {
 
   editCampoValidacion(item: ResponseCampoValidacionDTO): void {
     this.selectedCampoValidacionId = item.id;
+    this.setAuditData(item);
 
     this.form.patchValue({
       campoId: item.campo?.id ?? null,
@@ -136,6 +147,34 @@ export class CampoValidacionComponent implements OnInit {
       valor: item.valor,
       campoReferenciaId: item.campoReferencia?.id ?? null
     });
+  }
+
+  async confirmDeleteCampoValidacion(item: ResponseCampoValidacionDTO): Promise<void> {
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirmar acción',
+      text: `¿Está seguro de inactivar la validación para el campo ${item.campo?.nombre}?`,
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    this.inactiveCampoValidacion(item);
+  }
+
+  deleteCurrentCampoValidacion(): void {
+    if (!this.selectedCampoValidacionId) {
+      return;
+    }
+
+    const item = this.campoValidaciones.find((value) => value.id === this.selectedCampoValidacionId);
+    if (item) {
+      void this.confirmDeleteCampoValidacion(item);
+    }
   }
 
   resetForm(): void {
@@ -146,6 +185,7 @@ export class CampoValidacionComponent implements OnInit {
       campoReferenciaId: null
     });
     this.selectedCampoValidacionId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -200,10 +240,51 @@ export class CampoValidacionComponent implements OnInit {
     });
   }
 
+  private inactiveCampoValidacion(item: ResponseCampoValidacionDTO): void {
+    const payload: UpdateCampoValidacionDTO = {
+      campoId: item.campo?.id ?? Number(this.form.get('campoId')?.value),
+      tipoValidacionId: item.tipoValidacion?.id ?? Number(this.form.get('tipoValidacionId')?.value),
+      valor: item.valor,
+      campoReferenciaId: item.campoReferencia?.id ?? null,
+      estado: 'I'
+    };
+
+    this.campoValidacionService.updateCampoValidacion(item.id, payload).subscribe({
+      next: (response) => {
+        if (!response.error) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Operacion exitosa',
+            text: 'La validación de campo fue inactivada correctamente.',
+            confirmButtonText: 'Aceptar'
+          });
+
+          this.resetForm();
+          this.loadCampoValidaciones();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No fue posible inactivar la validación de campo.',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      },
+      error: () => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No fue posible inactivar la validación de campo.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    });
+  }
+
   private loadCatalogos(): void {
     this.campoService.getAllCampos().subscribe({
       next: (response) => {
-        this.campos = response?.contenido ?? [];
+        this.campos = sortByIndice(response?.contenido ?? []);
       },
       error: () => {
         this.campos = [];
@@ -212,7 +293,7 @@ export class CampoValidacionComponent implements OnInit {
 
     this.tipoValidacionService.getAllTipoValidaciones().subscribe({
       next: (response) => {
-        this.tiposValidacion = response?.contenido ?? [];
+        this.tiposValidacion = sortByNombre(response?.contenido ?? []);
       },
       error: () => {
         this.tiposValidacion = [];
@@ -226,7 +307,9 @@ export class CampoValidacionComponent implements OnInit {
 
     this.campoValidacionService.getAllCampoValidaciones().subscribe({
       next: (response) => {
-        this.campoValidaciones = response?.contenido ?? [];
+        this.campoValidaciones = [...(response?.contenido ?? [])].sort((left, right) =>
+          (left.campo?.nombre ?? '').localeCompare(right.campo?.nombre ?? '', 'es', { sensitivity: 'base' })
+        );
         this.loading = false;
       },
       error: () => {
@@ -239,5 +322,24 @@ export class CampoValidacionComponent implements OnInit {
   private getCampoReferenciaIdOrNull(): number | null {
     const value = this.form.get('campoReferenciaId')?.value;
     return value === null || value === undefined || value === '' ? null : Number(value);
+  }
+
+  private setAuditData(item?: ResponseCampoValidacionDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
   }
 }

@@ -1,17 +1,53 @@
 <aside class="h-100 d-flex flex-column bg-white border-end">
   <nav class="flex-grow-1 px-3 overflow-auto py-3">
-    <div class="text-uppercase small text-muted fw-semibold mb-3">Operacion</div>
-    <ul class="nav nav-pills flex-column gap-2">
+
+    <ul class="nav nav-pills flex-column gap-2 mb-3">
       <li class="nav-item">
         <a
           class="nav-link d-flex align-items-center gap-2"
-          href=""
           routerLink="/app/operacion"
           routerLinkActive="active"
           [routerLinkActiveOptions]="{ exact: true }">
           <span class="material-symbols-outlined">dashboard</span>
           <span>Panel principal</span>
         </a>
+      </li>
+    </ul>
+
+    <div *ngIf="loading" class="small text-muted px-2 py-2">
+      Cargando menú...
+    </div>
+
+    <div *ngIf="!loading && errorMessage && menu.length === 0" class="small text-muted px-2 py-2">
+      {{ errorMessage }}
+    </div>
+
+    <ul *ngIf="!loading && menu.length > 0" class="nav nav-pills flex-column gap-2">
+      <li *ngFor="let modulo of menu; trackBy: trackByModuleId" class="nav-item mt-2">
+        <button
+          type="button"
+          class="nav-link w-100 d-flex align-items-center justify-content-between bg-transparent border-0"
+          (click)="toggleModule(modulo.id)">
+          <span class="d-flex align-items-center gap-2">
+            <span class="material-symbols-outlined small text-muted">{{ modulo.icono }}</span>
+            <span class="text-uppercase small text-muted fw-semibold">{{ modulo.nombre }}</span>
+          </span>
+          <span class="material-symbols-outlined small text-muted" style="font-size: 18px;">
+            {{ modulo.expanded ? 'expand_less' : 'expand_more' }}
+          </span>
+        </button>
+
+        <ul *ngIf="modulo.expanded" class="nav nav-pills flex-column gap-2 ms-2 mt-1">
+          <li *ngFor="let item of modulo.interfaces; trackBy: trackByInterfaceId" class="nav-item">
+            <a
+              class="nav-link d-flex align-items-center gap-2"
+              [routerLink]="item.ruta"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{ exact: true }">
+              <span>{{ item.nombre }}</span>
+            </a>
+          </li>
+        </ul>
       </li>
     </ul>
   </nav>

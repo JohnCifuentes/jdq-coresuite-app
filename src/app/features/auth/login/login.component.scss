@@ -1,5 +1,5 @@
 .login-wrapper {
-  min-height: 100vh;
+  height: 100%;
   background-color: #f5f7f8;
 }
 
@@ -45,28 +45,4 @@
 
 .login-footer a:hover {
   color: #003366;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: #ffffff;
-  z-index: 1050;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.modal-overlay .modal-header {
-  padding: 1.25rem 1.5rem 0.75rem;
-}
-
-.modal-overlay .modal-body {
-  padding: 0.75rem 1.5rem 1rem;
-}
-
-.modal-overlay .modal-footer {
-  padding: 0.75rem 1.5rem 1.25rem;
-  justify-content: center;
 }

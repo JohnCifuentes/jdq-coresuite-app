@@ -26,6 +26,7 @@ export interface UpdateInterfazDTO {
   nombre: string;
   descripcion: string;
   indice: number;
+  estado?: string;
 }
 
 export interface ResponseInterfazDTO {

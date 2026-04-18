@@ -1,0 +1,79 @@
+<div *ngIf="visible" class="modal-overlay" (click)="close()">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document" (click)="$event.stopPropagation()">
+    <div class="modal-content rounded-4 shadow-lg bg-white">
+      <div class="modal-header border-0 pb-0 justify-content-center position-relative">
+        <h5 class="modal-title fw-bold text-primary text-center">Política de Tratamiento de Datos Personales</h5>
+        <button type="button" class="btn-close position-absolute end-0 me-3" (click)="close()"></button>
+      </div>
+      <div class="modal-body pt-2" style="max-height:70vh; overflow-y:auto;">
+        <h6 class="fw-bold mt-3">Responsable del Tratamiento de la Información</h6>
+        <p>La presente Política de Tratamiento de Datos Personales establece los términos en que <strong>JDQ
+            CoreSuite</strong> recolecta, almacena, usa, circula y protege los datos personales de los usuarios que
+          utilizan la plataforma.</p>
+        <p><strong>Responsable del tratamiento:</strong> JDQ CoreSuite<br>
+          <strong>Correo electrónico de contacto:</strong> jdqsolutionssas&#64;gmail.com
+        </p>
+
+        <h6 class="fw-bold mt-3">Marco Legal</h6>
+        <p>Esta política se adopta en cumplimiento de lo dispuesto en la Ley 1581 de 2012, el Decreto 1377 de 2013 y
+          demás normas concordantes que regulan la protección de datos personales en Colombia.</p>
+
+        <h6 class="fw-bold mt-3">Datos Personales Recolectados</h6>
+        <p>La plataforma podrá recolectar y tratar los siguientes datos personales suministrados por los usuarios:</p>
+        <ul>
+          <li>Nombre completo</li>
+          <li>Número de identificación</li>
+          <li>Correo electrónico</li>
+          <li>Número de teléfono</li>
+          <li>Información necesaria para la autenticación en la plataforma</li>
+          <li>Cualquier otra información que el usuario suministre voluntariamente durante el uso de los servicios.</li>
+        </ul>
+
+        <h6 class="fw-bold mt-3">Finalidad del Tratamiento de los Datos</h6>
+        <p>Los datos personales recolectados serán utilizados para las siguientes finalidades:</p>
+        <ul>
+          <li>Permitir el registro de usuarios en la plataforma.</li>
+          <li>Gestionar la autenticación y acceso a los servicios ofrecidos.</li>
+          <li>Brindar soporte y atención a los usuarios.</li>
+          <li>Administrar y mejorar el funcionamiento de la aplicación.</li>
+          <li>Garantizar la seguridad de la plataforma.</li>
+          <li>Cumplir con obligaciones legales o regulatorias aplicables.</li>
+        </ul>
+
+        <h6 class="fw-bold mt-3">Derechos de los Titulares de los Datos</h6>
+        <p>De conformidad con la legislación vigente, los titulares de los datos personales tienen los siguientes
+          derechos:</p>
+        <ul>
+          <li>Conocer, actualizar y rectificar sus datos personales.</li>
+          <li>Solicitar prueba de la autorización otorgada para el tratamiento de sus datos.</li>
+          <li>Ser informados sobre el uso que se ha dado a sus datos personales.</li>
+          <li>Presentar quejas ante la Superintendencia de Industria y Comercio por infracciones a la normativa de
+            protección de datos.</li>
+          <li>Revocar la autorización y/o solicitar la supresión de sus datos cuando no se respeten los principios,
+            derechos y garantías legales.</li>
+        </ul>
+
+        <h6 class="fw-bold mt-3">Seguridad de la Información</h6>
+        <p>JDQ CoreSuite implementa medidas técnicas, administrativas y organizativas razonables para proteger los datos
+          personales contra acceso no autorizado, pérdida, alteración, divulgación o uso indebido.</p>
+
+        <h6 class="fw-bold mt-3">Transferencia y Almacenamiento de Datos</h6>
+        <p>Los datos personales podrán ser almacenados o procesados en infraestructuras tecnológicas utilizadas por la
+          plataforma, incluyendo servicios de computación en la nube, garantizando en todo momento el cumplimiento de
+          las medidas de seguridad aplicables.</p>
+
+        <h6 class="fw-bold mt-3">Vigencia de la Política</h6>
+        <p>La presente Política de Tratamiento de Datos Personales entra en vigencia a partir de su publicación y
+          permanecerá vigente mientras sea necesario para cumplir las finalidades descritas.</p>
+
+        <h6 class="fw-bold mt-3">Contacto</h6>
+        <p>Para consultas, solicitudes, reclamos o cualquier información relacionada con el tratamiento de datos
+          personales, los usuarios podrán comunicarse a través del siguiente correo electrónico:</p>
+        <p><strong>jdqsolutionssas&#64;gmail.com</strong></p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-primary" (click)="close()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>

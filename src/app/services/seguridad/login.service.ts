@@ -3,12 +3,9 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-// reuse RespuestaDTO from shared models
-import { RespuestaDTO } from '../../models/response.dto';
-
-interface LoginResponse {
-  token: string;
-}
+// reuse RespuestaDTO and TokenDTO from shared models
+import { RespuestaDTO, TokenDTO } from '../../models/response.dto';
+import { ConfirmarUsuarioCodigoDTO } from '../../models/seguridad/codigo.models';
 
 interface LoginRequest {
   correoElectronico: string;
@@ -24,6 +21,7 @@ interface TokenClaims {
 @Injectable({
   providedIn: 'root'
 })
+
 export class LoginService {
   private apiUrl = `${environment.apiBaseUrl}/api/login`;
   private storageKey = 'auth_token';
@@ -43,8 +41,12 @@ export class LoginService {
     };
   }
 
-  login(credentials: LoginRequest): Observable<RespuestaDTO<LoginResponse>> {
-    return this.http.post<RespuestaDTO<LoginResponse>>(this.apiUrl, credentials);
+  login(credentials: LoginRequest): Observable<RespuestaDTO<string>> {
+    return this.http.post<RespuestaDTO<string>>(this.apiUrl, credentials);
+  }
+
+  login2FA(data: ConfirmarUsuarioCodigoDTO): Observable<RespuestaDTO<TokenDTO>> {
+    return this.http.post<RespuestaDTO<TokenDTO>>(`${this.apiUrl}/2FA`, data);
   }
 
   cerrarSesion(usuarioId: number): Observable<RespuestaDTO<string>> {
@@ -111,4 +113,5 @@ export class LoginService {
   getRedirectFromToken(token: string | null = this.getToken()): string {
     return this.getRedirectByRole(this.getRoleFromToken(token));
   }
+
 }

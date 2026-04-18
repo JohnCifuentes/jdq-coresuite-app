@@ -16,6 +16,43 @@ a[routerLink] {
   cursor: pointer;
 }
 
+label {
+  font-family: var(--bs-body-font-family) !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  letter-spacing: normal !important;
+}
+
+.required-asterisk {
+  color: red;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-overlay .modal-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.modal-overlay .modal-body {
+  padding: 0.75rem 1.5rem 1rem;
+}
+
+.modal-overlay .modal-footer {
+  padding: 0.75rem 1.5rem 1.25rem;
+  justify-content: center;
+}
+
 .management-page {
   background-color: #f5f7f8;
 }

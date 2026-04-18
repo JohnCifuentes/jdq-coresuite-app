@@ -10,10 +10,12 @@ import {
 import { ModuloService } from '../../services/operacion/modulo.service';
 import { LoginService, UserRole } from '../../services/seguridad/login.service';
 import { formatBackendDateTime } from '../../core/utils/date-time.util';
+import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
+import { getDefaultAuditData, resolveAuditDate, resolveAuditValue, resolveEstadoLabel, sortByIndice } from '../../core/utils/admin-crud.util';
 
 @Component({
   selector: 'app-module',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
   templateUrl: './module.component.html',
   styleUrl: './module.component.scss'
 })
@@ -26,6 +28,9 @@ export class ModuleComponent implements OnInit {
   loggedUserName = '-';
   empresaId: number | null = null;
   selectedModuloId: number | null = null;
+  estadoActual = '-';
+  usuarioCreacion = '-';
+  fechaCreacion = '-';
   usuarioActualizacion = '-';
   fechaActualizacion = '-';
   userRole: UserRole = 'OPERACION';
@@ -74,6 +79,7 @@ export class ModuleComponent implements OnInit {
       }
 
       this.empresaId = empresaId ?? null;
+      this.setAuditData();
       this.refreshModulos();
     } catch {
       this.errorMessage = 'No se pudo leer la información del usuario logueado.';
@@ -141,8 +147,7 @@ export class ModuleComponent implements OnInit {
 
   editModulo(modulo: ResponseModuloDTO): void {
     this.selectedModuloId = modulo.id;
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
+    this.setAuditData(modulo);
 
     this.form.patchValue({
       nombre: modulo.nombre,
@@ -165,7 +170,18 @@ export class ModuleComponent implements OnInit {
       return;
     }
 
-    this.inactiveModulo(modulo.id);
+    this.inactiveModulo(modulo);
+  }
+
+  deleteCurrentModulo(): void {
+    if (!this.selectedModuloId) {
+      return;
+    }
+
+    const modulo = this.modulos.find((item) => item.id === this.selectedModuloId);
+    if (modulo) {
+      void this.confirmDeleteModulo(modulo);
+    }
   }
 
   resetForm(): void {
@@ -175,9 +191,8 @@ export class ModuleComponent implements OnInit {
       indice: 0
     });
 
-    this.usuarioActualizacion = '-';
-    this.fechaActualizacion = '-';
     this.selectedModuloId = null;
+    this.setAuditData();
   }
 
   isActivo(estado: string): boolean {
@@ -203,9 +218,6 @@ export class ModuleComponent implements OnInit {
         this.saving = false;
 
         if (!response.error) {
-          this.usuarioActualizacion = this.loggedUserName;
-          this.fechaActualizacion = this.getCurrentDateTime();
-
           Swal.fire({
             icon: 'success',
             title: 'Operación exitosa',
@@ -235,16 +247,20 @@ export class ModuleComponent implements OnInit {
     });
   }
 
-  private inactiveModulo(moduloId: number): void {
+  private inactiveModulo(modulo: ResponseModuloDTO): void {
+    if (!this.empresaId) {
+      return;
+    }
+
     const payload: UpdateModuloDTO = {
-      empresaId: this.empresaId!,
-      nombre: '',
-      descripcion: '',
-      indice: 0,
+      empresaId: this.empresaId,
+      nombre: modulo.nombre,
+      descripcion: modulo.descripcion,
+      indice: modulo.indice,
       estado: 'I'
     };
 
-    this.moduloService.updateModulo(moduloId, payload).subscribe({
+    this.moduloService.updateModulo(modulo.id, payload).subscribe({
       next: (response) => {
         if (!response.error) {
           Swal.fire({
@@ -254,7 +270,7 @@ export class ModuleComponent implements OnInit {
             confirmButtonText: 'Aceptar'
           });
 
-          if (this.selectedModuloId === moduloId) {
+          if (this.selectedModuloId === modulo.id) {
             this.resetForm();
           }
 
@@ -285,7 +301,7 @@ export class ModuleComponent implements OnInit {
 
     this.moduloService.getModulosByEmpresa(empresaId).subscribe({
       next: (response) => {
-        this.modulos = (response?.contenido ?? []).map((modulo) => this.normalizeModulo(modulo));
+        this.modulos = sortByIndice((response?.contenido ?? []).map((modulo) => this.normalizeModulo(modulo)));
         this.loading = false;
       },
       error: () => {
@@ -301,7 +317,7 @@ export class ModuleComponent implements OnInit {
 
     this.moduloService.getAllModulos().subscribe({
       next: (response) => {
-        this.modulos = (response?.contenido ?? []).map((modulo) => this.normalizeModulo(modulo));
+        this.modulos = sortByIndice((response?.contenido ?? []).map((modulo) => this.normalizeModulo(modulo)));
         this.loading = false;
       },
       error: () => {
@@ -346,14 +362,22 @@ export class ModuleComponent implements OnInit {
     };
   }
 
-  private getCurrentDateTime(): string {
-    return new Intl.DateTimeFormat('es-CO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(new Date());
+  private setAuditData(item?: ResponseModuloDTO): void {
+    const defaults = getDefaultAuditData(this.loggedUserName);
+
+    if (!item) {
+      this.estadoActual = defaults.estadoActual;
+      this.usuarioCreacion = defaults.usuarioCreacion;
+      this.fechaCreacion = defaults.fechaCreacion;
+      this.usuarioActualizacion = defaults.usuarioActualizacion;
+      this.fechaActualizacion = defaults.fechaActualizacion;
+      return;
+    }
+
+    this.estadoActual = resolveEstadoLabel(item, defaults.estadoActual);
+    this.usuarioCreacion = resolveAuditValue(item, ['usuarioCreacion', 'createdBy', 'usuarioRegistro'], defaults.usuarioCreacion);
+    this.fechaCreacion = resolveAuditDate(item, ['fechaCreacion', 'fechaRegistro', 'createdAt'], defaults.fechaCreacion);
+    this.usuarioActualizacion = resolveAuditValue(item, ['usuarioActualizacion', 'updatedBy', 'usuarioModificacion'], defaults.usuarioActualizacion);
+    this.fechaActualizacion = resolveAuditDate(item, ['fechaActualizacion', 'fechaModificacion', 'updatedAt'], defaults.fechaActualizacion);
   }
 }

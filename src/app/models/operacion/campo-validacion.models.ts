@@ -42,6 +42,7 @@ export interface UpdateCampoValidacionDTO {
   tipoValidacionId: number;
   valor: string;
   campoReferenciaId: number | null;
+  estado?: string;
 }
 
 export interface ResponseCampoValidacionDTO {

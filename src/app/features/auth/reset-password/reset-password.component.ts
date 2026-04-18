@@ -5,11 +5,12 @@ import { AuthRoutingModule } from '../auth-routing.module';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UsuarioService } from '../../../services/seguridad/usuario.service';
 import { UsuarioCredencialesDTO } from '../../../models/seguridad/usuario.models';
+import { RequiredFieldDirective } from '../../../core/directives/required-field.directive';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-reset-password',
-  imports: [CommonModule, ReactiveFormsModule, AuthRoutingModule],
+  imports: [CommonModule, ReactiveFormsModule, AuthRoutingModule, RequiredFieldDirective],
   templateUrl: './reset-password.component.html',
   styleUrl: './reset-password.component.scss'
 })

@@ -134,16 +134,19 @@
     </nav>
     <!-- User Section -->
     <div class="p-3 border-top flex-shrink-0 bg-white">
-        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
-            <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center flex-shrink-0"
-                style="width:44px;height:44px;min-width:44px;">
-                {{ userInitials }}
+        <button type="button" class="w-100 text-start border-0 bg-transparent p-0 mb-2 profile-trigger"
+            routerLink="/app/profile" aria-label="Ir a editar perfil">
+            <div class="d-flex align-items-center gap-2 bg-light rounded p-2">
+                <div class="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center flex-shrink-0"
+                    style="width:44px;height:44px;min-width:44px;">
+                    {{ userInitials }}
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="fw-semibold small text-truncate">{{ userName }}</div>
+                    <div class="text-muted small text-truncate">{{ userRole }}</div>
+                </div>
             </div>
-            <div class="flex-grow-1 overflow-hidden">
-                <div class="fw-semibold small text-truncate">{{ userName }}</div>
-                <div class="text-muted small text-truncate">{{ userRole }}</div>
-            </div>
-        </div>
+        </button>
         <button type="button"
             class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
             (click)="logout()">

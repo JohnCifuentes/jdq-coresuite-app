@@ -26,6 +26,7 @@ export interface UpdateInterfaceGrupoCamposDTO {
   nombre: string;
   descripcion: string;
   indice: number;
+  estado?: string;
 }
 
 export interface ResponseInterfaceGrupoCamposDTO {

@@ -21,6 +21,13 @@ export class SidebarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const role = this.loginService.getRoleFromToken();
+    this.userRole = role === 'SUPER-ADMIN'
+      ? 'Super Admin'
+      : role === 'ADMIN-EMPRESA'
+        ? 'Administrador'
+        : 'Operación';
+
     const rawUser = localStorage.getItem('auth_user');
 
     if (!rawUser) {
