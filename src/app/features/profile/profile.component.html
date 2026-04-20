@@ -190,19 +190,22 @@
           </div>
 
           <div formGroupName="licencia">
-            <div class="row g-3">
-              <div class="col-12 col-md-4">
-                <label [appRequiredField]="''" class="form-label">Plan</label>
-                <select class="form-select" formControlName="planId">
-                  <option [ngValue]="null" disabled>Seleccione...</option>
-                  <option *ngFor="let plan of planes" [ngValue]="plan.id">{{ plan.nombre }}</option>
-                </select>
-              </div>
-              <div class="col-12 col-md-4">
+            <app-plan-selector
+              [plans]="planes"
+              [currentPlanId]="licenciaActual?.plan?.id ?? null"
+              [selectedPlanId]="licenciaGroup.get('planId')?.value"
+              [disabled]="!licenciaId || processingPlanChange"
+              [loading]="processingPlanChange"
+              (planSelected)="onPlanSelected($event)"
+              (changeRequested)="saveLicencia()">
+            </app-plan-selector>
+
+            <div class="row g-3 mt-1">
+              <div class="col-12 col-md-6">
                 <label class="form-label">Fecha Expiración</label>
                 <input type="date" class="form-control" formControlName="fechaExpiracion" readonly>
               </div>
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-6">
                 <label class="form-label">Estado</label>
                 <div class="pt-2">
                   <span class="badge" [ngClass]="getEstadoBadgeClass(licenciaGroup.get('estado')?.value)">
@@ -216,14 +219,29 @@
               No se encontró una licencia activa asociada a la empresa.
             </div>
 
-            <div class="d-flex justify-content-end mt-4">
-              <button type="button" class="btn btn-primary px-4" (click)="saveLicencia()" [disabled]="licenciaGroup.invalid || savingLicencia || !licenciaId">
-                {{ savingLicencia ? 'Actualizando...' : 'Actualizar licencia' }}
-              </button>
-            </div>
+            <app-payment-status
+              *ngIf="lastPaymentResult && !isPaymentModalOpen"
+              class="d-block mt-3"
+              [status]="lastPaymentResult.status"
+              [message]="lastPaymentResult.message"
+              [reference]="lastPaymentResult.reference"
+              [showRetry]="lastPaymentResult.status !== paymentStatusEnum.Approved"
+              (retry)="retryPaymentFlow()"
+              (close)="clearPaymentFeedback()">
+            </app-payment-status>
           </div>
         </ng-container>
       </form>
     </div>
   </div>
 </div>
+
+<app-payment-modal
+  *ngIf="isPaymentModalOpen && selectedPlanForPayment"
+  [plan]="selectedPlanForPayment"
+  [empresaId]="empresaId"
+  [licenciaId]="licenciaId"
+  [licencia]="licenciaActual"
+  [resumeReference]="resumePaymentReference"
+  (closed)="handlePaymentModalClose($event)">
+</app-payment-modal>

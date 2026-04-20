@@ -1,0 +1,43 @@
+<div class="plan-selector card border-0 shadow-sm">
+  <div class="card-body">
+    <div class="plan-layout">
+      <div class="current-plan-row">
+        <span class="summary-label">Plan actual:</span>
+        <span class="summary-value">{{ currentPlan?.nombre || 'Sin plan' }}</span>
+        <span class="summary-price">{{ currentPlan ? formatCurrency(currentPlan.valor) : 'Sin facturación activa' }}</span>
+      </div>
+
+      <div class="action-row">
+        <div class="plan-field">
+          <label class="form-label fw-semibold">Plan</label>
+          <select class="form-select" [value]="selectedPlanId ?? ''" (change)="onSelectionChange($event)" [disabled]="disabled || loading">
+            <option value="" disabled>Seleccione...</option>
+            <option *ngFor="let plan of plans" [value]="plan.id">
+              {{ plan.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <div class="action-wrap">
+          <button type="button" class="btn btn-primary w-100" (click)="changeRequested.emit()"
+            [disabled]="disabled || loading || !selectedPlanId || selectedPlanId === currentPlanId">
+            {{ loading ? 'Procesando...' : 'Cambiar plan' }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="selectedPlan" class="selected-plan">
+        <div class="selected-plan-content">
+          <div>
+            <div class="fw-semibold">{{ selectedPlan.nombre }}</div>
+            <div class="text-muted small">{{ selectedPlan.descripcion || 'Plan empresarial' }}</div>
+          </div>
+          <div class="selected-plan-meta">
+            <div class="fw-bold text-primary">{{ formatCurrency(selectedPlan.valor) }}</div>
+            <small class="text-muted">{{ selectedPlan.cantidadUsuarios }} usuarios incluidos</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

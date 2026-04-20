@@ -28,6 +28,7 @@ export class InterfaceGrupoCamposComponent implements OnInit {
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
+  empresaId: number | null = null;
   selectedGrupoId: number | null = null;
   estadoActual = '-';
   usuarioCreacion = '-';
@@ -52,26 +53,36 @@ export class InterfaceGrupoCamposComponent implements OnInit {
   ngOnInit(): void {
     const rawUser = localStorage.getItem('auth_user');
 
-    if (rawUser) {
-      try {
-        const user = JSON.parse(rawUser);
-        const userNameParts = [user?.nombre1, user?.apellido1]
-          .filter((value: string | undefined) => !!value)
-          .map((value: string) => value.trim());
+    if (!rawUser) {
+      this.errorMessage = 'No se encontró información del usuario logueado.';
+      return;
+    }
 
-        if (userNameParts.length > 0) {
-          this.loggedUserName = userNameParts.join(' ');
-        } else if (user?.correoElectronico) {
-          this.loggedUserName = user.correoElectronico;
-        }
-      } catch {
-        this.loggedUserName = '-';
+    try {
+      const user = JSON.parse(rawUser);
+      const userNameParts = [user?.nombre1, user?.apellido1]
+        .filter((value: string | undefined) => !!value)
+        .map((value: string) => value.trim());
+
+      if (userNameParts.length > 0) {
+        this.loggedUserName = userNameParts.join(' ');
+      } else if (user?.correoElectronico) {
+        this.loggedUserName = user.correoElectronico;
       }
+
+      this.empresaId = user?.empresa?.id ?? null;
+    } catch {
+      this.errorMessage = 'No se pudo leer la información del usuario logueado.';
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
     }
 
     this.setAuditData();
     this.loadInterfaces();
-    this.loadGruposCampos();
   }
 
   get isEditMode(): boolean {
@@ -278,23 +289,44 @@ export class InterfaceGrupoCamposComponent implements OnInit {
   }
 
   private loadInterfaces(): void {
+    if (!this.empresaId) {
+      this.interfaces = [];
+      this.gruposCampos = [];
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = null;
+
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
-        this.interfaces = sortByIndice(response?.contenido ?? []);
+        this.interfaces = sortByIndice(
+          (response?.contenido ?? []).filter((item) => this.belongsInterfazToEmpresa(item))
+        );
+        this.loadGruposCampos();
       },
       error: () => {
         this.interfaces = [];
+        this.gruposCampos = [];
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar las interfaces asociadas a la empresa.';
       }
     });
   }
 
   private loadGruposCampos(): void {
-    this.loading = true;
-    this.errorMessage = null;
+    const allowedInterfaceIds = new Set<number>(
+      this.interfaces
+        .map((item) => item?.id)
+        .filter((id): id is number => typeof id === 'number')
+    );
 
     this.interfaceGrupoCamposService.getAllInterfaceGrupoCampos().subscribe({
       next: (response) => {
-        this.gruposCampos = sortByIndice(response?.contenido ?? []);
+        this.gruposCampos = sortByIndice(
+          (response?.contenido ?? []).filter((item) => this.belongsGrupoToEmpresa(item, allowedInterfaceIds))
+        );
         this.loading = false;
       },
       error: () => {
@@ -302,6 +334,18 @@ export class InterfaceGrupoCamposComponent implements OnInit {
         this.errorMessage = 'No fue posible cargar los grupos de campos registrados.';
       }
     });
+  }
+
+  private belongsInterfazToEmpresa(item: ResponseInterfazDTO): boolean {
+    return item?.modulo?.empresa?.id === this.empresaId;
+  }
+
+  private belongsGrupoToEmpresa(
+    item: ResponseInterfaceGrupoCamposDTO,
+    allowedInterfaceIds: Set<number>
+  ): boolean {
+    const interfazId = item?.interfaz?.id;
+    return typeof interfazId === 'number' && allowedInterfaceIds.has(interfazId);
   }
 
   private setAuditData(item?: ResponseInterfaceGrupoCamposDTO): void {

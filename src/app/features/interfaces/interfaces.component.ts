@@ -53,28 +53,36 @@ export class InterfacesComponent implements OnInit {
   ngOnInit(): void {
     const rawUser = localStorage.getItem('auth_user');
 
-    if (rawUser) {
-      try {
-        const user = JSON.parse(rawUser);
-        const userNameParts = [user?.nombre1, user?.apellido1]
-          .filter((value: string | undefined) => !!value)
-          .map((value: string) => value.trim());
+    if (!rawUser) {
+      this.errorMessage = 'No se encontró información del usuario logueado.';
+      return;
+    }
 
-        if (userNameParts.length > 0) {
-          this.loggedUserName = userNameParts.join(' ');
-        } else if (user?.correoElectronico) {
-          this.loggedUserName = user.correoElectronico;
-        }
+    try {
+      const user = JSON.parse(rawUser);
+      const userNameParts = [user?.nombre1, user?.apellido1]
+        .filter((value: string | undefined) => !!value)
+        .map((value: string) => value.trim());
 
-        this.empresaId = user?.empresa?.id ?? null;
-      } catch {
-        this.loggedUserName = '-';
+      if (userNameParts.length > 0) {
+        this.loggedUserName = userNameParts.join(' ');
+      } else if (user?.correoElectronico) {
+        this.loggedUserName = user.correoElectronico;
       }
+
+      this.empresaId = user?.empresa?.id ?? null;
+    } catch {
+      this.errorMessage = 'No se pudo leer la información del usuario logueado.';
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
     }
 
     this.setAuditData();
     this.loadModulos();
-    this.loadInterfaces();
   }
 
   get isEditMode(): boolean {
@@ -284,9 +292,18 @@ export class InterfacesComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
+    const allowedModuleIds = new Set<number>(
+      this.modulos
+        .map((modulo) => modulo?.id)
+        .filter((id): id is number => typeof id === 'number')
+    );
+
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
-        this.interfaces = sortByIndice(response?.contenido ?? []);
+        const interfaces = response?.contenido ?? [];
+        this.interfaces = this.sortInterfacesByModuloIndice(
+          interfaces.filter((item) => this.belongsToEmpresa(item, allowedModuleIds))
+        );
         this.loading = false;
       },
       error: () => {
@@ -297,19 +314,74 @@ export class InterfacesComponent implements OnInit {
   }
 
   private loadModulos(): void {
-    const request$ = this.empresaId
-      ? this.moduloService.getModulosByEmpresa(this.empresaId)
-      : this.moduloService.getAllModulos();
+    if (!this.empresaId) {
+      this.modulos = [];
+      this.interfaces = [];
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
+    }
 
-    request$.subscribe({
+    this.loading = true;
+    this.errorMessage = null;
+
+    this.moduloService.getModulosByEmpresa(this.empresaId).subscribe({
       next: (response) => {
         this.modulos = sortByIndice(response?.contenido ?? []);
+        this.loadInterfaces();
       },
       error: () => {
         this.modulos = [];
+        this.interfaces = [];
+        this.loading = false;
+        this.errorMessage = 'No fue posible cargar los módulos asociados a la empresa.';
       }
     });
   }
+
+  private belongsToEmpresa(item: ResponseInterfazDTO, allowedModuleIds: Set<number>): boolean {
+    if (!this.empresaId) {
+      return false;
+    }
+
+    const moduloId = item?.modulo?.id;
+    const moduloEmpresaId = item?.modulo?.empresa?.id ?? null;
+
+    return moduloEmpresaId === this.empresaId
+      || (typeof moduloId === 'number' && allowedModuleIds.has(moduloId));
+  }
+
+  private sortInterfacesByModuloIndice(items: ResponseInterfazDTO[]): ResponseInterfazDTO[] {
+    return [...items].sort((left, right) => {
+      const leftModuloIndice = this.normalizeOrderValue(left?.modulo?.indice);
+      const rightModuloIndice = this.normalizeOrderValue(right?.modulo?.indice);
+
+      if (leftModuloIndice !== rightModuloIndice) {
+        return leftModuloIndice - rightModuloIndice;
+      }
+
+      const leftModuloNombre = (left?.modulo?.nombre ?? '').trim().toLocaleLowerCase();
+      const rightModuloNombre = (right?.modulo?.nombre ?? '').trim().toLocaleLowerCase();
+
+      if (leftModuloNombre !== rightModuloNombre) {
+        return leftModuloNombre.localeCompare(rightModuloNombre, 'es');
+      }
+
+      const leftIndice = this.normalizeOrderValue(left?.indice);
+      const rightIndice = this.normalizeOrderValue(right?.indice);
+
+      if (leftIndice !== rightIndice) {
+        return leftIndice - rightIndice;
+      }
+
+      return (left?.nombre ?? '').localeCompare(right?.nombre ?? '', 'es');
+    });
+  }
+
+  private normalizeOrderValue(value: unknown): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+  }
+
   private setAuditData(item?: ResponseInterfazDTO): void {
     const defaults = getDefaultAuditData(this.loggedUserName);
 

@@ -31,6 +31,7 @@ export class CampoValidacionComponent implements OnInit {
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
+  empresaId: number | null = null;
   selectedCampoValidacionId: number | null = null;
   estadoActual = '-';
   usuarioCreacion = '-';
@@ -56,26 +57,36 @@ export class CampoValidacionComponent implements OnInit {
   ngOnInit(): void {
     const rawUser = localStorage.getItem('auth_user');
 
-    if (rawUser) {
-      try {
-        const user = JSON.parse(rawUser);
-        const userNameParts = [user?.nombre1, user?.apellido1]
-          .filter((value: string | undefined) => !!value)
-          .map((value: string) => value.trim());
+    if (!rawUser) {
+      this.errorMessage = 'No se encontró información del usuario logueado.';
+      return;
+    }
 
-        if (userNameParts.length > 0) {
-          this.loggedUserName = userNameParts.join(' ');
-        } else if (user?.correoElectronico) {
-          this.loggedUserName = user.correoElectronico;
-        }
-      } catch {
-        this.loggedUserName = '-';
+    try {
+      const user = JSON.parse(rawUser);
+      const userNameParts = [user?.nombre1, user?.apellido1]
+        .filter((value: string | undefined) => !!value)
+        .map((value: string) => value.trim());
+
+      if (userNameParts.length > 0) {
+        this.loggedUserName = userNameParts.join(' ');
+      } else if (user?.correoElectronico) {
+        this.loggedUserName = user.correoElectronico;
       }
+
+      this.empresaId = user?.empresa?.id ?? null;
+    } catch {
+      this.errorMessage = 'No se pudo leer la información del usuario logueado.';
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
     }
 
     this.setAuditData();
     this.loadCatalogos();
-    this.loadCampoValidaciones();
   }
 
   get isEditMode(): boolean {
@@ -282,12 +293,22 @@ export class CampoValidacionComponent implements OnInit {
   }
 
   private loadCatalogos(): void {
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
+    }
+
     this.campoService.getAllCampos().subscribe({
       next: (response) => {
-        this.campos = sortByIndice(response?.contenido ?? []);
+        this.campos = sortByIndice(
+          (response?.contenido ?? []).filter((item) => this.belongsCampoToEmpresa(item))
+        );
+        this.loadCampoValidaciones();
       },
       error: () => {
         this.campos = [];
+        this.campoValidaciones = [];
+        this.errorMessage = 'No fue posible cargar los campos de la empresa.';
       }
     });
 
@@ -305,11 +326,22 @@ export class CampoValidacionComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
+    const allowedCampoIds = new Set<number>(
+      this.campos
+        .map((item) => item?.id)
+        .filter((id): id is number => typeof id === 'number')
+    );
+
     this.campoValidacionService.getAllCampoValidaciones().subscribe({
       next: (response) => {
-        this.campoValidaciones = [...(response?.contenido ?? [])].sort((left, right) =>
-          (left.campo?.nombre ?? '').localeCompare(right.campo?.nombre ?? '', 'es', { sensitivity: 'base' })
-        );
+        this.campoValidaciones = [...(response?.contenido ?? [])]
+          .filter((item) => {
+            const campoId = item?.campo?.id;
+            return typeof campoId === 'number' && allowedCampoIds.has(campoId);
+          })
+          .sort((left, right) =>
+            (left.campo?.nombre ?? '').localeCompare(right.campo?.nombre ?? '', 'es', { sensitivity: 'base' })
+          );
         this.loading = false;
       },
       error: () => {
@@ -322,6 +354,29 @@ export class CampoValidacionComponent implements OnInit {
   private getCampoReferenciaIdOrNull(): number | null {
     const value = this.form.get('campoReferenciaId')?.value;
     return value === null || value === undefined || value === '' ? null : Number(value);
+  }
+
+  private belongsCampoToEmpresa(item: ResponseCampoDTO): boolean {
+    const record = item as unknown as Record<string, unknown>;
+
+    return this.readNestedNumber(record, ['interfaz', 'modulo', 'empresa', 'id']) === this.empresaId
+      || this.readNestedNumber(record, ['interfaceGrupoCampos', 'interfaz', 'modulo', 'empresa', 'id']) === this.empresaId
+      || this.readNestedNumber(record, ['listaValores', 'empresa', 'id']) === this.empresaId;
+  }
+
+  private readNestedNumber(source: Record<string, unknown>, path: string[]): number | null {
+    let current: unknown = source;
+
+    for (const key of path) {
+      if (!current || typeof current !== 'object') {
+        return null;
+      }
+
+      current = (current as Record<string, unknown>)[key];
+    }
+
+    const parsed = Number(current);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private setAuditData(item?: ResponseCampoValidacionDTO): void {

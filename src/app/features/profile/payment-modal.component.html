@@ -1,0 +1,44 @@
+<div class="payment-modal-backdrop" role="dialog" aria-modal="true">
+  <div class="payment-modal-card shadow-lg">
+    <div class="payment-modal-header">
+      <div>
+        <h5 class="mb-1">Pago seguro con Wompi</h5>
+        <small class="text-muted">El cambio de plan se aplicará solo cuando el pago sea aprobado.</small>
+      </div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeModal()">
+        Cerrar
+      </button>
+    </div>
+
+    <div class="payment-modal-body">
+      <div class="summary-box" *ngIf="plan as selectedPlan">
+        <div>
+          <div class="summary-label">Nuevo plan</div>
+          <div class="summary-title">{{ selectedPlan.nombre }}</div>
+          <div class="text-muted small">{{ selectedPlan.descripcion || 'Plan empresarial' }}</div>
+        </div>
+
+        <div class="text-md-end">
+          <div class="summary-label">Total a pagar</div>
+          <div class="summary-amount">{{ formatCurrency(selectedPlan.valor) }}</div>
+          <small class="text-muted">{{ selectedPlan.cantidadUsuarios }} usuarios</small>
+        </div>
+      </div>
+
+      <app-payment-status
+        [status]="status"
+        [message]="message"
+        [reference]="reference"
+        [busy]="busy"
+        [showRetry]="showRetry"
+        (retry)="retryPayment()"
+        (close)="closeModal()">
+      </app-payment-status>
+
+      <div class="secure-note mt-3">
+        <span class="material-symbols-outlined">shield_lock</span>
+        <span>La validación del pago y del cambio de plan siempre se confirma con el backend.</span>
+      </div>
+    </div>
+  </div>
+</div>

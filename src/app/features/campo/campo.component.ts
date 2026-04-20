@@ -33,6 +33,7 @@ export class CampoComponent implements OnInit {
   saving = false;
   errorMessage: string | null = null;
   loggedUserName = '-';
+  empresaId: number | null = null;
   selectedCampoId: number | null = null;
   estadoActual = '-';
   usuarioCreacion = '-';
@@ -67,27 +68,37 @@ export class CampoComponent implements OnInit {
   ngOnInit(): void {
     const rawUser = localStorage.getItem('auth_user');
 
-    if (rawUser) {
-      try {
-        const user = JSON.parse(rawUser);
-        const userNameParts = [user?.nombre1, user?.apellido1]
-          .filter((value: string | undefined) => !!value)
-          .map((value: string) => value.trim());
+    if (!rawUser) {
+      this.errorMessage = 'No se encontró información del usuario logueado.';
+      return;
+    }
 
-        if (userNameParts.length > 0) {
-          this.loggedUserName = userNameParts.join(' ');
-        } else if (user?.correoElectronico) {
-          this.loggedUserName = user.correoElectronico;
-        }
-      } catch {
-        this.loggedUserName = '-';
+    try {
+      const user = JSON.parse(rawUser);
+      const userNameParts = [user?.nombre1, user?.apellido1]
+        .filter((value: string | undefined) => !!value)
+        .map((value: string) => value.trim());
+
+      if (userNameParts.length > 0) {
+        this.loggedUserName = userNameParts.join(' ');
+      } else if (user?.correoElectronico) {
+        this.loggedUserName = user.correoElectronico;
       }
+
+      this.empresaId = user?.empresa?.id ?? null;
+    } catch {
+      this.errorMessage = 'No se pudo leer la información del usuario logueado.';
+      return;
+    }
+
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
     }
 
     this.setAuditData();
-    this.loadCatalogos();
     this.setupConditionalValidators();
-    this.loadCampos();
+    this.loadCatalogos();
   }
 
   get isEditMode(): boolean {
@@ -328,21 +339,38 @@ export class CampoComponent implements OnInit {
   }
 
   private loadCatalogos(): void {
+    if (!this.empresaId) {
+      this.errorMessage = 'No se encontró la empresa asociada al usuario logueado.';
+      return;
+    }
+
     this.interfazService.getAllInterfaz().subscribe({
       next: (response) => {
-        this.interfaces = sortByIndice(response?.contenido ?? []);
+        this.interfaces = sortByIndice(
+          (response?.contenido ?? []).filter((item) => this.belongsInterfazToEmpresa(item))
+        );
+
+        const allowedInterfazIds = new Set<number>(this.interfaces.map((item) => item.id));
+
+        this.interfaceGrupoCamposService.getAllInterfaceGrupoCampos().subscribe({
+          next: (groupResponse) => {
+            this.gruposCampos = sortByIndice(
+              (groupResponse?.contenido ?? []).filter((item) => this.belongsGrupoToEmpresa(item, allowedInterfazIds))
+            );
+            this.loadCampos();
+          },
+          error: () => {
+            this.gruposCampos = [];
+            this.campos = [];
+            this.errorMessage = 'No fue posible cargar los grupos de campos de la empresa.';
+          }
+        });
       },
       error: () => {
         this.interfaces = [];
-      }
-    });
-
-    this.interfaceGrupoCamposService.getAllInterfaceGrupoCampos().subscribe({
-      next: (response) => {
-        this.gruposCampos = sortByIndice(response?.contenido ?? []);
-      },
-      error: () => {
         this.gruposCampos = [];
+        this.campos = [];
+        this.errorMessage = 'No fue posible cargar las interfaces de la empresa.';
       }
     });
 
@@ -355,7 +383,7 @@ export class CampoComponent implements OnInit {
       }
     });
 
-    this.listaValoresService.getAllListaValores().subscribe({
+    this.listaValoresService.getListaValoresByEmpresa(this.empresaId).subscribe({
       next: (response) => {
         this.listasValores = sortByNombre(response?.contenido ?? []);
       },
@@ -369,9 +397,14 @@ export class CampoComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
+    const allowedInterfazIds = new Set<number>(this.interfaces.map((item) => item.id));
+    const allowedGrupoIds = new Set<number>(this.gruposCampos.map((item) => item.id));
+
     this.campoService.getAllCampos().subscribe({
       next: (response) => {
-        this.campos = sortByIndice(response?.contenido ?? []);
+        this.campos = sortByIndice(
+          (response?.contenido ?? []).filter((item) => this.belongsCampoToEmpresa(item, allowedInterfazIds, allowedGrupoIds))
+        );
         this.loading = false;
       },
       error: () => {
@@ -416,6 +449,48 @@ export class CampoComponent implements OnInit {
   private normalizeOptionalText(value: unknown): string | null {
     const normalized = typeof value === 'string' ? value.trim() : '';
     return normalized.length > 0 ? normalized : null;
+  }
+
+  private belongsInterfazToEmpresa(item: ResponseInterfazDTO): boolean {
+    const record = item as unknown as Record<string, unknown>;
+    return this.readNestedNumber(record, ['modulo', 'empresa', 'id']) === this.empresaId;
+  }
+
+  private belongsGrupoToEmpresa(
+    item: ResponseInterfaceGrupoCamposDTO,
+    allowedInterfazIds: Set<number>
+  ): boolean {
+    const interfazId = item?.interfaz?.id;
+    return typeof interfazId === 'number' && allowedInterfazIds.has(interfazId);
+  }
+
+  private belongsCampoToEmpresa(
+    item: ResponseCampoDTO,
+    allowedInterfazIds: Set<number>,
+    allowedGrupoIds: Set<number>
+  ): boolean {
+    const interfazId = item?.interfaz?.id;
+    const grupoId = item?.interfaceGrupoCampos?.id;
+    const listaEmpresaId = item?.listaValores?.empresa?.id ?? null;
+
+    return (typeof interfazId === 'number' && allowedInterfazIds.has(interfazId))
+      || (typeof grupoId === 'number' && allowedGrupoIds.has(grupoId))
+      || listaEmpresaId === this.empresaId;
+  }
+
+  private readNestedNumber(source: Record<string, unknown>, path: string[]): number | null {
+    let current: unknown = source;
+
+    for (const key of path) {
+      if (!current || typeof current !== 'object') {
+        return null;
+      }
+
+      current = (current as Record<string, unknown>)[key];
+    }
+
+    const parsed = Number(current);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private setAuditData(item?: ResponseCampoDTO): void {

@@ -1,0 +1,44 @@
+.status-card {
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid transparent;
+  background: #f8f9fa;
+}
+
+.status-card.neutral {
+  background: #f8f9fa;
+  border-color: #dde3ea;
+}
+
+.status-card.pending {
+  background: #fff8e6;
+  border-color: #ffe08a;
+}
+
+.status-card.approved {
+  background: #eaf8ef;
+  border-color: #a9e0b8;
+}
+
+.status-card.declined,
+.status-card.error,
+.status-card.cancelled {
+  background: #fff1f1;
+  border-color: #f0b5b5;
+}
+
+.status-icon {
+  font-size: 1.6rem;
+  color: #2d5bff;
+}
+
+.reference-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  background: rgba(13, 110, 253, 0.08);
+  color: #0d6efd;
+  font-size: 0.75rem;
+  font-weight: 600;
+}

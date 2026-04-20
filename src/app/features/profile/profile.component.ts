@@ -1,9 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin, map, of, Subject, switchMap, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
+import { PaymentModalComponent } from './payment-modal.component';
+import { PaymentStatusComponent } from './payment-status.component';
+import { PlanSelectorComponent } from './plan-selector.component';
+import { PaymentFlowResult, PaymentStatus } from './payment.models';
+import { PaymentService } from './payment.service';
 import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
 import {
   DocumentRule,
@@ -32,7 +37,14 @@ import { PlanService } from '../../services/sistema/plan.service';
 
 @Component({
   selector: 'app-profile',
-  imports: [CommonModule, ReactiveFormsModule, RequiredFieldDirective],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RequiredFieldDirective,
+    PlanSelectorComponent,
+    PaymentModalComponent,
+    PaymentStatusComponent
+  ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss'
 })
@@ -60,6 +72,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   licenciaActual: ResponseLicenciaDTO | null = null;
   currentEmpresa: ResponseEmpresaDTO | null = null;
   loggedUserName = 'Usuario';
+  selectedPlanForPayment: ResponsePlanDTO | null = null;
+  isPaymentModalOpen = false;
+  processingPlanChange = false;
+  resumePaymentReference: string | null = null;
+  lastPaymentResult: PaymentFlowResult | null = null;
+  readonly paymentStatusEnum = PaymentStatus;
+  private hasCheckedPendingPayment = false;
 
   usuarioDocumentRule: DocumentRule | null = null;
   empresaDocumentRule: DocumentRule | null = null;
@@ -79,6 +98,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private departamentoService: DepartamentoService,
     private municipioService: MunicipioService,
     private loginService: LoginService,
+    private paymentService: PaymentService,
+    private route: ActivatedRoute,
     private router: Router
   ) {
     this.form = this.fb.group({
@@ -149,6 +170,42 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   reloadProfile(): void {
     this.loadProfileData();
+  }
+
+  onPlanSelected(planId: number): void {
+    this.licenciaGroup.get('planId')?.setValue(planId);
+    this.lastPaymentResult = null;
+  }
+
+  clearPaymentFeedback(): void {
+    this.lastPaymentResult = null;
+  }
+
+  retryPaymentFlow(): void {
+    if (this.lastPaymentResult?.status === PaymentStatus.Pending && this.lastPaymentResult.reference && this.selectedPlanForPayment) {
+      this.resumePaymentReference = this.lastPaymentResult.reference;
+      this.processingPlanChange = true;
+      this.isPaymentModalOpen = true;
+      return;
+    }
+
+    this.saveLicencia();
+  }
+
+  handlePaymentModalClose(result: PaymentFlowResult | null): void {
+    this.isPaymentModalOpen = false;
+    this.processingPlanChange = false;
+    this.resumePaymentReference = null;
+
+    if (!result) {
+      return;
+    }
+
+    this.lastPaymentResult = result;
+
+    if (result.status === PaymentStatus.Approved) {
+      this.loadProfileData();
+    }
   }
 
   saveUsuario(): void {
@@ -253,49 +310,39 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   saveLicencia(): void {
-    if (!this.empresaId || !this.licenciaId || !this.licenciaActual || this.savingLicencia || this.licenciaGroup.invalid) {
+    if (!this.empresaId || !this.licenciaId || !this.licenciaActual || this.licenciaGroup.invalid) {
       this.licenciaGroup.markAllAsTouched();
       return;
     }
 
-    const raw = this.licenciaGroup.getRawValue();
-    const licenciaPayload: UpdateLicenciaDTO = {
-      empresaId: this.empresaId,
-      planId: Number(raw.planId),
-      fechaCompra: this.licenciaActual.fechaCompra,
-      fechaExpiracion: this.licenciaActual.fechaExpiracion,
-      activo: this.licenciaActual.activo
-    };
+    const selectedPlanId = Number(this.licenciaGroup.getRawValue().planId);
 
-    this.savingLicencia = true;
-    this.licenciaService.updateLicencia(this.licenciaId, licenciaPayload)
-      .pipe(
-        finalize(() => {
-          this.savingLicencia = false;
-        }),
-        takeUntil(this.destroy$)
-      )
-      .subscribe({
-        next: (response) => {
-          if (response.error) {
-            this.showError('No fue posible actualizar la licencia activa.');
-            return;
-          }
+    if (!selectedPlanId) {
+      return;
+    }
 
-          this.licenciaActual = response.contenido;
-          this.loadProfileData();
-
-          Swal.fire({
-            icon: 'success',
-            title: 'Licencia actualizada',
-            text: 'El plan de la licencia fue actualizado correctamente.',
-            confirmButtonText: 'Aceptar'
-          });
-        },
-        error: (err: any) => {
-          this.showError(err?.error?.contenido || err?.error?.message || 'No fue posible actualizar la licencia activa.');
-        }
+    if (this.licenciaActual.plan?.id === selectedPlanId) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin cambios',
+        text: 'Debe seleccionar un plan diferente al actual para continuar con el pago.',
+        confirmButtonText: 'Aceptar'
       });
+      return;
+    }
+
+    const selectedPlan = this.planes.find((plan) => plan.id === selectedPlanId) ?? null;
+
+    if (!selectedPlan) {
+      this.showError('No fue posible identificar el plan seleccionado.');
+      return;
+    }
+
+    this.selectedPlanForPayment = selectedPlan;
+    this.resumePaymentReference = null;
+    this.lastPaymentResult = null;
+    this.processingPlanChange = true;
+    this.isPaymentModalOpen = true;
   }
 
   confirmDeactivateCompany(): void {
@@ -509,6 +556,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
           this.applyDocumentRule('usuario', usuario.tipoIdentificacion?.id ?? null, false);
           this.applyDocumentRule('empresa', empresa.tipoIdentificacion?.id ?? null, false);
+          this.tryRestorePendingPayment();
         },
         error: () => {
           this.errorMessage = 'Ocurrió un error al cargar la información del perfil.';
@@ -625,6 +673,51 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
 
     control.updateValueAndValidity();
+  }
+
+  private tryRestorePendingPayment(): void {
+    if (this.hasCheckedPendingPayment) {
+      return;
+    }
+
+    this.hasCheckedPendingPayment = true;
+
+    const storedSession = this.paymentService.getPendingPaymentSession();
+    const routeReference = this.route.snapshot.queryParamMap.get('paymentRef');
+    const reference = routeReference ?? storedSession?.reference ?? null;
+    const targetPlanId = storedSession?.planId ?? null;
+
+    if (!reference || !targetPlanId) {
+      return;
+    }
+
+    if (this.licenciaActual?.plan?.id === targetPlanId) {
+      this.paymentService.clearPendingPaymentSession();
+      this.clearPaymentQueryParams();
+      return;
+    }
+
+    this.selectedPlanForPayment = this.planes.find((plan) => plan.id === targetPlanId) ?? null;
+
+    if (!this.selectedPlanForPayment) {
+      return;
+    }
+
+    this.resumePaymentReference = reference;
+    this.processingPlanChange = true;
+    this.isPaymentModalOpen = true;
+    this.clearPaymentQueryParams();
+  }
+
+  private clearPaymentQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        paymentRef: null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   private getAuthContext(): { usuarioId: number | null; empresaId: number | null; displayName: string } {
