@@ -18,12 +18,20 @@
           </select>
         </div>
 
+        <!--
         <div class="action-wrap">
-          <button type="button" class="btn btn-primary w-100" (click)="changeRequested.emit()"
+          <button type="button" class="btn btn-primary w-100" (click)="onChangePlanClicked()"
             [disabled]="disabled || loading || !selectedPlanId || selectedPlanId === currentPlanId">
             {{ loading ? 'Procesando...' : 'Cambiar plan' }}
           </button>
         </div>
+        -->
+
+        <div *ngIf="preparingPayment" class="text-muted small mt-1">Preparando botón de pago...</div>
+        <div *ngIf="paymentError" class="text-danger small mt-1">{{ paymentError }}</div>
+
+        <div #wompiContainer></div>
+        
       </div>
 
       <div *ngIf="selectedPlan" class="selected-plan">

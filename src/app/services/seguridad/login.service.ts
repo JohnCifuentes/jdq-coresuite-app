@@ -45,8 +45,8 @@ export class LoginService {
     return this.http.post<RespuestaDTO<string>>(this.apiUrl, credentials);
   }
 
-  login2FA(data: ConfirmarUsuarioCodigoDTO): Observable<RespuestaDTO<TokenDTO>> {
-    return this.http.post<RespuestaDTO<TokenDTO>>(`${this.apiUrl}/2FA`, data);
+  login2FA(data: ConfirmarUsuarioCodigoDTO): Observable<RespuestaDTO<TokenDTO | string>> {
+    return this.http.post<RespuestaDTO<TokenDTO | string>>(`${this.apiUrl}/2FA`, data);
   }
 
   cerrarSesion(usuarioId: number): Observable<RespuestaDTO<string>> {

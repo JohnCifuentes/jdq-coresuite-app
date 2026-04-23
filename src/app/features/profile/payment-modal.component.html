@@ -25,7 +25,23 @@
         </div>
       </div>
 
+      <!-- Widget listo: mostrar botón para lanzar el pago -->
+      <div *ngIf="widgetReady && status === paymentStatusEnum.Initial" class="wompi-launch-wrapper text-center py-3">
+        <p class="text-muted small mb-3">
+          Todo listo. Al continuar serás redirigido a la plataforma segura de Wompi para completar el pago.
+        </p>
+        <button type="button" class="btn btn-primary px-4" (click)="launchWidget()">
+          <span class="material-symbols-outlined align-middle me-2" style="font-size:18px">payments</span>
+          Continuar con el pago
+        </button>
+        <p class="text-muted small mt-2 mb-0">
+          Referencia: <strong>{{ reference }}</strong>
+        </p>
+      </div>
+
+      <!-- Estado del pago (creando, error, cancelado, pendiente) -->
       <app-payment-status
+        *ngIf="!(widgetReady && status === paymentStatusEnum.Initial)"
         [status]="status"
         [message]="message"
         [reference]="reference"
@@ -34,6 +50,19 @@
         (retry)="retryPayment()"
         (close)="closeModal()">
       </app-payment-status>
+
+      <!-- Acceso directo a la página de resultado cuando el polling terminó sin confirmación -->
+      <div
+        *ngIf="status === paymentStatusEnum.Pending && showRetry && reference"
+        class="text-center mt-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="goToPaymentResponse()">
+          <span class="material-symbols-outlined align-middle me-1" style="font-size:16px">open_in_new</span>
+          Ver resultado del pago
+        </button>
+        <p class="text-muted small mt-1 mb-0">
+          Consulta el estado de la referencia <strong>{{ reference }}</strong> directamente.
+        </p>
+      </div>
 
       <div class="secure-note mt-3">
         <span class="material-symbols-outlined">shield_lock</span>

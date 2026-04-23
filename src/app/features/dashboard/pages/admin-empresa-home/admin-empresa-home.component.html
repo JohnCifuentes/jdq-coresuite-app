@@ -65,20 +65,15 @@
                     </div>
                     <div class="chart-container">
                         <div class="chart-bars">
-                            <div class="chart-bar bar-40"></div>
-                            <div class="chart-bar bar-55"></div>
-                            <div class="chart-bar bar-45"></div>
-                            <div class="chart-bar bar-70"></div>
-                            <div class="chart-bar bar-85"></div>
-                            <div class="chart-bar bar-100 active"></div>
+                            <div *ngFor="let slot of chartSlots"
+                                 class="chart-bar"
+                                 [class.active]="slot.isActive"
+                                 [style.height.%]="slot.heightPct"
+                                 [title]="slot.count + ' sesiones'">
+                            </div>
                         </div>
                         <div class="chart-labels">
-                            <span>08:00</span>
-                            <span>11:00</span>
-                            <span>14:00</span>
-                            <span>17:00</span>
-                            <span>20:00</span>
-                            <span>23:00</span>
+                            <span *ngFor="let slot of chartSlots">{{ slot.label }}</span>
                         </div>
                     </div>
                 </div>
@@ -102,8 +97,18 @@
                                 <div class="name">{{ sesion.displayName }}</div>
                                 <div class="meta">{{ sesion.meta }}</div>
                             </div>
-                            <div class="status"></div>
+                            <button class="btn-close-session"
+                                    (click)="closeSession(sesion.id)"
+                                    [disabled]="closingSessionId !== null"
+                                    title="Cerrar sesión">
+                                <span class="material-symbols-outlined" *ngIf="closingSessionId !== sesion.id">logout</span>
+                                <span class="spinner-border spinner-border-sm" *ngIf="closingSessionId === sesion.id"></span>
+                            </button>
                         </div>
+                    </div>
+                    <div *ngIf="closeSessionFeedback" class="close-session-feedback"
+                         [class.is-error]="closeSessionFeedback.includes('posible')">
+                        {{ closeSessionFeedback }}
                     </div>
                     <button class="btn btn-outline-primary w-100 mt-4" [disabled]="loading || totalUsuarios === 0">
                         Ver Todos los Usuarios

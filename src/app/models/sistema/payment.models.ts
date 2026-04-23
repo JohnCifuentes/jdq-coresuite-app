@@ -11,15 +11,19 @@ export interface Payment {
   reference: string;
   amountInCents: number;
   currency: string;
-  signature: string;
-  redirectUrl?: string;
-  publicKey?: string;
+  publicKey: string;
+  integritySignature: string;
+}
+
+export interface WompiTransactionResult {
+  id: string;
+  status: string;
+  reference: string;
 }
 
 export enum PaymentStatus {
   Initial = 'INITIAL',
   Creating = 'CREATING',
-  Checkout = 'CHECKOUT',
   Pending = 'PENDING',
   Approved = 'APPROVED',
   Declined = 'DECLINED',
@@ -30,18 +34,17 @@ export enum PaymentStatus {
 export interface PaymentStatusResponse {
   reference?: string;
   status?: string;
-  message?: string;
-  transactionId?: string;
-  data?: unknown;
+  planId?: number;
+  amountInCents?: number;
+  currency?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PendingPaymentSession {
   reference: string;
   planId: number;
   planName: string;
-  amountInCents: number;
-  currency: string;
-  redirectUrl: string;
   createdAt: string;
 }
 
@@ -117,9 +120,7 @@ export function resolvePaymentStatus(source: unknown): PaymentStatus {
 export function getPaymentDisplayMessage(status: PaymentStatus): string {
   switch (status) {
     case PaymentStatus.Creating:
-      return 'Preparando el cobro seguro de Wompi...';
-    case PaymentStatus.Checkout:
-      return 'Abriendo la pasarela de pago...';
+      return 'Preparando el pago. Abriendo el widget de Wompi...';
     case PaymentStatus.Pending:
       return 'Procesando pago. Estamos validando el estado real con el backend.';
     case PaymentStatus.Approved:

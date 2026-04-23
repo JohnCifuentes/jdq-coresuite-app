@@ -55,4 +55,5 @@ export class SesionService {
   getSesionesByEmpresa(empresaId: number): Observable<RespuestaDTO<ResponseSesionDTO[]>> {
     return this.http.get<RespuestaDTO<ResponseSesionDTO[]>>(`${this.apiUrl}/${empresaId}/empresa`, this.getAuthOptions());
   }
+  
 }

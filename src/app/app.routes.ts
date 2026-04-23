@@ -28,6 +28,7 @@ import { CampoValidacionComponent } from './features/campo-validacion/campo-vali
 import { OperacionLayoutComponent } from './layouts/operacion-layout/operacion-layout.component';
 import { OperacionDinamicaComponent } from './features/operacion-dinamica/operacion-dinamica.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { PaymentResponseComponent } from './features/payment-response/payment-response.component';
 
 export const routes: Routes = [
   {
@@ -79,5 +80,6 @@ export const routes: Routes = [
     children: [
       { path: ':interfazId', component: OperacionDinamicaComponent }
     ]
-  }
+  },
+  { path: 'payment-response', component: PaymentResponseComponent }
 ];

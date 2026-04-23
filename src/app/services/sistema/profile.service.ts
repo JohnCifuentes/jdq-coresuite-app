@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RespuestaDTO } from '../../models/response.dto';
 import { ResponseLicenciaDTO, UpdateLicenciaDTO } from '../../models/sistema/licencia.models';
-import { LicenciaService } from '../../services/sistema/licencia.service';
-import { UpdateUserPlanRequest } from './payment.models';
+import { UpdateUserPlanRequest } from '../../models/sistema/payment.models';
+import { LicenciaService } from './licencia.service';
 
 @Injectable({
   providedIn: 'root'

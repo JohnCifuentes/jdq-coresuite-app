@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Router } from '@angular/router';
 import { Subject, finalize, takeUntil, timer } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { ResponseLicenciaDTO } from '../../models/sistema/licencia.models';
 import { ResponsePlanDTO } from '../../models/sistema/plan.models';
-import { PaymentService } from './payment.service';
+import { PaymentService } from '../../services/sistema/payment.service';
 import { PaymentStatusComponent } from './payment-status.component';
-import { ProfileService } from './profile.service';
+import { ProfileService } from '../../services/sistema/profile.service';
 import {
   Payment,
   PaymentFlowResult,
@@ -15,7 +15,7 @@ import {
   UpdateUserPlanRequest,
   getPaymentDisplayMessage,
   resolvePaymentStatus
-} from './payment.models';
+} from '../../models/sistema/payment.models';
 
 @Component({
   selector: 'app-payment-modal',
@@ -41,24 +41,30 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
   transactionId: string | null = null;
   busy = false;
   showRetry = false;
+  widgetReady = false;
+
+  private storedPayment: Payment | null = null;
 
   private readonly destroy$ = new Subject<void>();
   private pollStop$ = new Subject<void>();
   private pollAttempts = 0;
-  private readonly maxPollAttempts = 40;
+  private consecutiveErrors = 0;
+  private readonly maxPollAttempts = 10;
+  private readonly maxConsecutiveErrors = 3;
 
   constructor(
     private paymentService: PaymentService,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     if (this.resumeReference) {
       this.reference = this.resumeReference;
       this.status = PaymentStatus.Pending;
-      this.message = 'Reanudando la validación de tu pago...';
+      this.message = 'Sincronizando el estado del pago con Wompi...';
       this.busy = true;
-      this.startPolling(this.resumeReference);
+      this.syncThenPollOrResolve(this.resumeReference);
       return;
     }
 
@@ -72,6 +78,17 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
   }
 
   closeModal(): void {
+    // Si hay una referencia activa y el pago aún no se resolvió, cancelar el registro en el backend
+    const unresolvedStatuses = [PaymentStatus.Initial, PaymentStatus.Creating, PaymentStatus.Pending];
+    if (this.reference && unresolvedStatuses.includes(this.status)) {
+      this.paymentService.cancelPayment(this.reference)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (err) => this.logDebug('No se pudo cancelar el registro al cerrar el modal', err)
+        });
+      this.paymentService.clearPendingPaymentSession();
+    }
+
     this.closed.emit({
       status: this.status,
       reference: this.reference,
@@ -81,12 +98,60 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
     });
   }
 
+  goToPaymentResponse(): void {
+    if (this.reference) {
+      this.closed.emit(null);
+      this.router.navigate(['/payment-response'], { queryParams: { ref: this.reference } });
+    }
+  }
+
   retryPayment(): void {
     this.stopPolling();
+    // Cancelar el registro anterior para que no quede en PENDING indefinidamente
+    const previousReference = this.reference;
+    if (previousReference) {
+      this.paymentService.cancelPayment(previousReference)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          error: (err) => this.logDebug('No se pudo cancelar el registro anterior al reintentar', err)
+        });
+    }
     this.paymentService.clearPendingPaymentSession();
     this.reference = null;
     this.transactionId = null;
+    this.storedPayment = null;
+    this.widgetReady = false;
     this.createAndLaunchPayment();
+  }
+
+  launchWidget(): void {
+    if (!this.storedPayment || !this.widgetReady) {
+      return;
+    }
+    const payment = this.storedPayment;
+    this.widgetReady = false;
+    try {
+      this.paymentService.openWidget(
+        payment,
+        () => {
+          this.logDebug('Widget cerrado manualmente por el usuario', {});
+          this.paymentService.clearPendingPaymentSession();
+          // Notificar al backend para actualizar el registro a CANCELLED (best-effort)
+          if (payment.reference) {
+            this.paymentService.cancelPayment(payment.reference)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe({
+                error: (err) => this.logDebug('No se pudo cancelar el registro de pago en el backend', err)
+              });
+          }
+          this.setResult(PaymentStatus.Cancelled, 'Cerraste el widget antes de completar el pago. Puedes intentarlo nuevamente.');
+        }
+      );
+    } catch (e) {
+      console.error('[Wompi] Error abriendo widget', e);
+      this.widgetReady = true;
+      this.setResult(PaymentStatus.Error, 'No fue posible abrir el widget de pago. Recargue la página e intente nuevamente.');
+    }
   }
 
   formatCurrency(value: number | null | undefined): string {
@@ -95,6 +160,35 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
       currency: 'COP',
       maximumFractionDigits: 0
     }).format(Number(value ?? 0));
+  }
+
+  private syncThenPollOrResolve(reference: string): void {
+    this.paymentService.syncPaymentStatus(reference)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const payload = response?.contenido ?? response;
+          const resolvedStatus = resolvePaymentStatus(payload);
+
+          if (resolvedStatus === PaymentStatus.Approved) {
+            this.completeApprovedFlow(payload);
+          } else if (resolvedStatus === PaymentStatus.Pending || resolvedStatus === PaymentStatus.Initial) {
+            // Aún pendiente: seguir consultando
+            this.startPolling(reference);
+          } else {
+            // CANCELLED, DECLINED, ERROR: mostrar estado final
+            this.paymentService.clearPendingPaymentSession();
+            this.setResult(
+              resolvedStatus,
+              this.extractMessage(payload) || getPaymentDisplayMessage(resolvedStatus)
+            );
+          }
+        },
+        error: () => {
+          // Si la sincronización falla, continuar con el polling normal
+          this.startPolling(reference);
+        }
+      });
   }
 
   private createAndLaunchPayment(): void {
@@ -113,140 +207,58 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
     this.paymentService.createPayment(selectedPlan.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          if (response.error || !response.contenido) {
-            this.logDebug('Respuesta inválida en createPayment', response);
+        next: (payment) => {
+          if (!payment) {
+            this.logDebug('Respuesta inválida en createPayment', payment);
             this.setResult(PaymentStatus.Error, 'No fue posible iniciar el pago. Intenta nuevamente.');
             return;
           }
 
-          const payment = response.contenido;
           this.logDebug('Respuesta createPayment recibida', {
             reference: payment.reference,
-            amountInCents: payment.amountInCents,
-            currency: payment.currency,
-            hasSignature: !!payment.signature,
-            hasPublicKey: !!(payment.publicKey || environment.wompiPublicKey)
+            amountInCents: payment.amountInCents
           });
-          const expectedAmount = Math.round(Number(selectedPlan.valor ?? 0) * 100);
 
-          if (!payment.reference || Number(payment.amountInCents) !== expectedAmount) {
+          if (!payment.reference || !payment.publicKey || !payment.integritySignature) {
             this.setResult(
               PaymentStatus.Error,
-              'El monto validado por el backend no coincide con el plan seleccionado. No se abrió el checkout.'
+              'La respuesta del servidor no contiene los datos necesarios para continuar.'
             );
             return;
           }
 
-          const redirectUrl = payment.redirectUrl || this.paymentService.buildRedirectUrl(payment.reference);
           const session: PendingPaymentSession = {
             reference: payment.reference,
             planId: selectedPlan.id,
             planName: selectedPlan.nombre,
-            amountInCents: payment.amountInCents,
-            currency: payment.currency,
-            redirectUrl,
             createdAt: new Date().toISOString()
           };
 
           this.paymentService.storePendingPaymentSession(session);
           this.reference = payment.reference;
-
-          this.openCheckout({
-            ...payment,
-            redirectUrl
-          });
+          this.storedPayment = payment;
+          this.widgetReady = true;
+          this.status = PaymentStatus.Initial;
+          this.message = '';
+          this.busy = false;
         },
         error: (err: any) => {
-          this.logDebug('Error HTTP en createPayment', err);
-          this.setResult(PaymentStatus.Error, 'No fue posible iniciar el pago. Intenta nuevamente.');
+          console.error('[Wompi] Error creando transacción', err);
+          const status = err?.status;
+          const msg = status === 409
+            ? 'No fue posible iniciar el pago. Intenta nuevamente.'
+            : 'No fue posible iniciar el pago. Intenta nuevamente.';
+          this.setResult(PaymentStatus.Error, msg);
         }
       });
   }
 
-  private openCheckout(payment: Payment): void {
-    this.status = PaymentStatus.Checkout;
-    this.message = getPaymentDisplayMessage(PaymentStatus.Checkout);
-    this.busy = true;
 
-    const publicKey = environment.wompiPublicKey?.trim() || payment.publicKey?.trim();
-
-    if (!environment.production) {
-      console.debug('Wompi Public Key:', environment.wompiPublicKey);
-    }
-
-    const validationError = this.validatePaymentConfig(payment, publicKey);
-
-    if (validationError) {
-      this.logDebug('Configuración inválida de Wompi', { payment, validationError, publicKey });
-      this.setResult(PaymentStatus.Error, 'No fue posible iniciar el pago. Intenta nuevamente.');
-      return;
-    }
-
-    this.paymentService.loadCheckoutScript()
-      .then(() => {
-        const widgetConstructor = (window as any).WidgetCheckout;
-
-        if (!environment.production) {
-          console.debug('typeof WidgetCheckout:', typeof widgetConstructor);
-          console.debug({
-            reference: payment.reference,
-            amountInCents: payment.amountInCents,
-            currency: payment.currency,
-            signature: payment.signature,
-            publicKey
-          });
-        }
-
-        this.logDebug('WidgetCheckout disponible', {
-          isAvailable: typeof widgetConstructor === 'function',
-          reference: payment.reference
-        });
-
-        if (typeof widgetConstructor !== 'function') {
-          throw new Error('WidgetCheckout no está disponible después de cargar el script.');
-        }
-
-        const checkout = new widgetConstructor({
-          currency: payment.currency,
-          amountInCents: payment.amountInCents,
-          reference: payment.reference,
-          publicKey,
-          signature: {
-            integrity: payment.signature
-          },
-          redirectUrl: payment.redirectUrl || this.paymentService.buildRedirectUrl(payment.reference)
-        });
-
-        try {
-          if (!environment.production) {
-            console.debug('Abriendo checkout...');
-          }
-
-          checkout.open((result: unknown) => {
-            this.logDebug('Callback de checkout ejecutado', result);
-            this.verifyPaymentNow(payment.reference);
-          });
-
-          if (!environment.production) {
-            console.debug('Checkout invocado correctamente.');
-          }
-
-          this.startPolling(payment.reference);
-        } catch (error) {
-          console.error('Error abriendo Wompi:', error);
-          this.setResult(PaymentStatus.Error, 'No fue posible iniciar el pago. Intenta nuevamente.');
-        }
-      })
-      .catch((error: Error) => {
-        this.logDebug('Fallo al abrir checkout', error);
-        this.setResult(PaymentStatus.Error, 'No fue posible iniciar el pago. Intenta nuevamente.');
-      });
-  }
 
   private startPolling(reference: string): void {
     this.stopPolling();
     this.pollAttempts = 0;
+    this.consecutiveErrors = 0;
     this.busy = true;
     this.showRetry = false;
     this.status = PaymentStatus.Pending;
@@ -271,13 +283,14 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
+          this.consecutiveErrors = 0;
           if (response?.error) {
             if (stopAfterThisCheck) {
               this.stopPolling();
               this.busy = false;
               this.showRetry = true;
               this.status = PaymentStatus.Pending;
-              this.message = 'El pago sigue en proceso. Puede reintentar la validación en unos segundos.';
+              this.message = 'No fue posible confirmar el pago. Verifica el resultado en la página de pago.';
             }
             return;
           }
@@ -286,12 +299,16 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
         },
         error: (err: any) => {
           this.logDebug('Error consultando estado del pago', err);
-          if (stopAfterThisCheck) {
+          this.consecutiveErrors += 1;
+          const stopByErrors = this.consecutiveErrors >= this.maxConsecutiveErrors;
+          if (stopAfterThisCheck || stopByErrors) {
             this.stopPolling();
             this.busy = false;
             this.showRetry = true;
             this.status = PaymentStatus.Pending;
-            this.message = 'No fue posible validar el pago en este momento. Puedes reintentar.';
+            this.message = stopByErrors
+              ? 'No fue posible conectar con el servidor. Verifica el resultado en la página de pago.'
+              : 'No fue posible validar el pago en este momento. Verifica el resultado en la página de pago.';
           }
         }
       });
@@ -307,14 +324,14 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
 
     if (resolvedStatus === PaymentStatus.Pending || resolvedStatus === PaymentStatus.Initial) {
       this.status = PaymentStatus.Pending;
-      this.message = stopAfterThisCheck
-        ? 'El pago continúa en proceso. Puede cerrar el modal y volver más tarde.'
-        : 'Procesando pago. Consultando estado cada 3 segundos...';
-      this.busy = !stopAfterThisCheck;
-      this.showRetry = stopAfterThisCheck;
-
       if (stopAfterThisCheck) {
         this.stopPolling();
+        this.busy = false;
+        this.showRetry = true;
+        this.message = 'El pago no pudo confirmarse en el tiempo esperado. Verifica el resultado en la página de pago.';
+      } else {
+        this.message = 'Procesando pago. Consultando estado cada 3 segundos...';
+        this.busy = true;
       }
       return;
     }
@@ -341,13 +358,19 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const today = new Date();
+    const fechaCompra = today.toISOString().split('T')[0];
+    const nextYear = new Date(today);
+    nextYear.setFullYear(today.getFullYear() + 1);
+    const fechaExpiracion = nextYear.toISOString().split('T')[0];
+
     const request: UpdateUserPlanRequest = {
       licenciaId,
       empresaId,
       planId: selectedPlan.id,
-      fechaCompra: licencia.fechaCompra,
-      fechaExpiracion: licencia.fechaExpiracion,
-      activo: licencia.activo
+      fechaCompra,
+      fechaExpiracion,
+      activo: true
     };
 
     this.status = PaymentStatus.Pending;
@@ -382,36 +405,8 @@ export class PaymentModalComponent implements OnInit, OnDestroy {
       });
   }
 
-  private validatePaymentConfig(payment: Payment, publicKey: string | undefined): string | null {
-    if (!payment.reference?.trim()) {
-      return 'La referencia del pago es inválida.';
-    }
-
-    if (!Number.isFinite(Number(payment.amountInCents)) || Number(payment.amountInCents) <= 0) {
-      return 'El monto del pago no es válido.';
-    }
-
-    if (payment.currency?.trim() !== 'COP') {
-      return 'La moneda recibida no es soportada por este flujo.';
-    }
-
-    if (!payment.signature?.trim()) {
-      return 'La firma de integridad es obligatoria.';
-    }
-
-    if (!publicKey || publicKey !== publicKey.trim()) {
-      return 'La llave pública de Wompi no es válida.';
-    }
-
-    if (!(publicKey.startsWith('pub_test_') || publicKey.startsWith('pub_prod_'))) {
-      return 'La llave pública de Wompi no tiene un formato válido.';
-    }
-
-    return null;
-  }
-
   private logDebug(message: string, data?: unknown): void {
-    if (!environment.production) {
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
       console.debug('[Wompi][Profile]', message, data ?? '');
     }
   }

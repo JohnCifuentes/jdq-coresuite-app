@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { PaymentStatus, getPaymentDisplayMessage } from './payment.models';
+import { PaymentStatus, getPaymentDisplayMessage } from '../../models/sistema/payment.models';
 
 @Component({
   selector: 'app-payment-status',
@@ -37,7 +37,6 @@ export class PaymentStatusComponent {
         return 'status-card cancelled';
       case PaymentStatus.Pending:
       case PaymentStatus.Creating:
-      case PaymentStatus.Checkout:
         return 'status-card pending';
       default:
         return 'status-card neutral';
@@ -56,7 +55,6 @@ export class PaymentStatusComponent {
         return 'close';
       case PaymentStatus.Pending:
       case PaymentStatus.Creating:
-      case PaymentStatus.Checkout:
         return 'hourglass_top';
       default:
         return 'payments';

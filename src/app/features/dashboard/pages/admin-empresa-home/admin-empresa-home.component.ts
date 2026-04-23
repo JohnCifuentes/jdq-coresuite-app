@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subject, forkJoin, takeUntil } from 'rxjs';
 import { ResponseUsuarioDTO } from '../../../../models/seguridad/usuario.models';
 import { ResponseLicenciaDTO } from '../../../../models/sistema/licencia.models';
-import { ResponseSesionDTO } from '../../../../models/sistema/sesion.models';
+import { InactiveSesionDTO, ResponseSesionDTO } from '../../../../models/sistema/sesion.models';
 import { UsuarioService } from '../../../../services/seguridad/usuario.service';
 import { LicenciaService } from '../../../../services/sistema/licencia.service';
 import { SesionService } from '../../../../services/sistema/sesion.service';
@@ -15,6 +15,13 @@ interface ActiveSessionView {
   meta: string;
 }
 
+interface ChartSlot {
+  label: string;
+  count: number;
+  heightPct: number;
+  isActive: boolean;
+}
+
 @Component({
   selector: 'app-admin-empresa-home',
   imports: [CommonModule],
@@ -22,7 +29,7 @@ interface ActiveSessionView {
   styleUrl: './admin-empresa-home.component.scss'
 })
 
-export class AdminEmpresaHomeComponent implements OnInit {
+export class AdminEmpresaHomeComponent implements OnInit, OnDestroy {
   loading = false;
   errorMessage: string | null = null;
   empresaId: number | null = null;
@@ -31,6 +38,11 @@ export class AdminEmpresaHomeComponent implements OnInit {
   usuariosActivos = 0;
   usuariosPermitidos = 0;
   sesionesActivas: ActiveSessionView[] = [];
+  chartSlots: ChartSlot[] = [];
+  closingSessionId: number | null = null;
+  closeSessionFeedback: string | null = null;
+
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private usuarioService: UsuarioService,
@@ -63,12 +75,42 @@ export class AdminEmpresaHomeComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   get porcentajeSaludSistema(): number {
     if (!this.usuariosPermitidos) {
       return 0;
     }
 
     return Math.min(100, Math.round((this.usuariosActivos / this.usuariosPermitidos) * 100));
+  }
+
+  closeSession(sessionId: number): void {
+    if (this.closingSessionId !== null) {
+      return;
+    }
+    this.closingSessionId = sessionId;
+    this.closeSessionFeedback = null;
+    const payload: InactiveSesionDTO = { estado: 'I' };
+    this.sesionService.inactiveSesion(sessionId, payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.sesionesActivas = this.sesionesActivas.filter((s) => s.id !== sessionId);
+          this.usuariosActivos = Math.max(0, this.usuariosActivos - 1);
+          this.closingSessionId = null;
+          this.closeSessionFeedback = 'Sesión cerrada correctamente.';
+          setTimeout(() => { this.closeSessionFeedback = null; }, 3000);
+        },
+        error: () => {
+          this.closingSessionId = null;
+          this.closeSessionFeedback = 'No fue posible cerrar la sesión.';
+          setTimeout(() => { this.closeSessionFeedback = null; }, 3000);
+        }
+      });
   }
 
   private loadDashboardData(empresaId: number): void {
@@ -78,7 +120,7 @@ export class AdminEmpresaHomeComponent implements OnInit {
       usuarios: this.usuarioService.getUsuariosByEmpresa(empresaId),
       sesiones: this.sesionService.getSesionesByEmpresa(empresaId),
       licencias: this.licenciaService.getLicenciasByEmpresa(empresaId)
-    }).subscribe({
+    }).pipe(takeUntil(this.destroy$)).subscribe({
       next: ({ usuarios, sesiones, licencias }) => {
         this.loading = false;
 
@@ -95,6 +137,7 @@ export class AdminEmpresaHomeComponent implements OnInit {
         this.usuariosActivos = this.getSesionesActivas(sesionesEmpresa).length;
         this.usuariosPermitidos = this.getUsuariosPermitidos(licenciasEmpresa);
         this.sesionesActivas = this.buildActiveSessionsView(usuariosEmpresa, sesionesEmpresa);
+        this.chartSlots = this.buildChartSlots(sesionesEmpresa);
       },
       error: () => {
         this.loading = false;
@@ -112,6 +155,31 @@ export class AdminEmpresaHomeComponent implements OnInit {
     const plan = licenciaActiva?.plan as (ResponseLicenciaDTO['plan'] & { cantidadUsuarios?: number }) | undefined;
 
     return plan?.cantidadUsuarios ?? 0;
+  }
+
+  private buildChartSlots(sesiones: ResponseSesionDTO[]): ChartSlot[] {
+    const now = Date.now();
+    const slotCount = 6;
+    const slotSizeMs = 4 * 60 * 60 * 1000; // 4 h → cubre 24 h
+    const windowStart = now - slotCount * slotSizeMs;
+
+    const slots: ChartSlot[] = Array.from({ length: slotCount }, (_, i) => {
+      const slotStart = windowStart + i * slotSizeMs;
+      const slotEnd = slotStart + slotSizeMs;
+      const hour = new Date(slotStart).getHours();
+      const label = `${String(hour).padStart(2, '0')}:00`;
+      const count = sesiones.filter((s) => {
+        const t = new Date(s.fechaInicio || s.fechaCreacion).getTime();
+        return t >= slotStart && t < slotEnd;
+      }).length;
+      return { label, count, heightPct: 0, isActive: i === slotCount - 1 };
+    });
+
+    const maxCount = Math.max(...slots.map((s) => s.count), 1);
+    slots.forEach((s) => {
+      s.heightPct = s.count === 0 ? 5 : Math.max(5, Math.round((s.count / maxCount) * 100));
+    });
+    return slots;
   }
 
   private buildActiveSessionsView(

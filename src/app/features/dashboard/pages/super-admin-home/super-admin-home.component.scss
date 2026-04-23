@@ -139,12 +139,45 @@
 	color: #6c757d;
 }
 
-.status {
-	width: 8px;
-	height: 8px;
-	background: #10b981;
-	border-radius: 50%;
+.btn-close-session {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	margin-left: auto;
+	flex-shrink: 0;
+	width: 28px;
+	height: 28px;
+	border: none;
+	background: transparent;
+	border-radius: 6px;
+	color: #6c757d;
+	cursor: pointer;
+	transition: background 0.15s, color 0.15s;
+
+	.material-symbols-outlined {
+		font-size: 1rem;
+	}
+
+	&:hover:not(:disabled) {
+		background: rgba(220, 53, 69, 0.1);
+		color: #dc3545;
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+}
+
+.close-session-feedback {
+	margin-top: 12px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #198754;
+
+	&.is-error {
+		color: #dc3545;
+	}
 }
 
 /* SOFT COLORS */

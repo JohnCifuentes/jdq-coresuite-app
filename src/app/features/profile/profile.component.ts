@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { finalize, forkJoin, map, of, Subject, switchMap, takeUntil } from 'rxjs';
 import Swal from 'sweetalert2';
 import { PaymentModalComponent } from './payment-modal.component';
 import { PaymentStatusComponent } from './payment-status.component';
 import { PlanSelectorComponent } from './plan-selector.component';
-import { PaymentFlowResult, PaymentStatus } from './payment.models';
-import { PaymentService } from './payment.service';
+import { PaymentFlowResult, PaymentStatus } from '../../models/sistema/payment.models';
+import { PaymentService } from '../../services/sistema/payment.service';
 import { RequiredFieldDirective } from '../../core/directives/required-field.directive';
 import {
   DocumentRule,
@@ -99,7 +99,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private municipioService: MunicipioService,
     private loginService: LoginService,
     private paymentService: PaymentService,
-    private route: ActivatedRoute,
     private router: Router
   ) {
     this.form = this.fb.group({
@@ -147,9 +146,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.setupWatchers();
     this.loadProfileData();
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
   ngOnDestroy(): void {
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -196,6 +197,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.isPaymentModalOpen = false;
     this.processingPlanChange = false;
     this.resumePaymentReference = null;
+
+    if (!result || result.status !== PaymentStatus.Approved) {
+      // Clear any leftover session so a page refresh does not re-open the modal.
+      this.paymentService.clearPendingPaymentSession();
+    }
 
     if (!result) {
       return;
@@ -675,6 +681,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
     control.updateValueAndValidity();
   }
 
+  private readonly onVisibilityChange = (): void => {
+    if (document.visibilityState !== 'visible' || this.isPaymentModalOpen || this.loading) {
+      return;
+    }
+    const ctx = this.paymentService.getLocalReference();
+    if (ctx) {
+      this.openResumeModal(ctx.reference, ctx.planId);
+    }
+  };
+
   private tryRestorePendingPayment(): void {
     if (this.hasCheckedPendingPayment) {
       return;
@@ -682,42 +698,36 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.hasCheckedPendingPayment = true;
 
-    const storedSession = this.paymentService.getPendingPaymentSession();
-    const routeReference = this.route.snapshot.queryParamMap.get('paymentRef');
-    const reference = routeReference ?? storedSession?.reference ?? null;
-    const targetPlanId = storedSession?.planId ?? null;
-
-    if (!reference || !targetPlanId) {
-      return;
-    }
-
-    if (this.licenciaActual?.plan?.id === targetPlanId) {
+    const ctx = this.paymentService.getLocalReference();
+    if (!ctx) {
       this.paymentService.clearPendingPaymentSession();
-      this.clearPaymentQueryParams();
       return;
     }
 
-    this.selectedPlanForPayment = this.planes.find((plan) => plan.id === targetPlanId) ?? null;
+    this.openResumeModal(ctx.reference, ctx.planId);
+  }
 
-    if (!this.selectedPlanForPayment) {
+  private openResumeModal(reference: string, planId: number): void {
+    if (this.isPaymentModalOpen) {
       return;
     }
 
+    // Payment already applied – clean up and do nothing
+    if (this.licenciaActual?.plan?.id === planId) {
+      this.paymentService.clearLocalReference();
+      this.paymentService.clearPendingPaymentSession();
+      return;
+    }
+
+    const plan = this.planes.find((p) => p.id === planId) ?? null;
+    if (!plan) {
+      return;
+    }
+
+    this.selectedPlanForPayment = plan;
     this.resumePaymentReference = reference;
     this.processingPlanChange = true;
     this.isPaymentModalOpen = true;
-    this.clearPaymentQueryParams();
-  }
-
-  private clearPaymentQueryParams(): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: {
-        paymentRef: null
-      },
-      queryParamsHandling: 'merge',
-      replaceUrl: true
-    });
   }
 
   private getAuthContext(): { usuarioId: number | null; empresaId: number | null; displayName: string } {

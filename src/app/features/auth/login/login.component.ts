@@ -111,18 +111,25 @@ export class LoginComponent {
       finalize(() => { this.isLoading = false; })
     ).subscribe({
       next: (res) => {
-        if (!res.error) {
-          const token = res.contenido.token;
-          this.mostrar2FA = false;
-          this.codigo2FA = '';
-          const creds: UsuarioCredencialesDTO = this.form.value;
-          this.completarLogin(token, creds);
-        } else {
-          Swal.fire({ icon: 'error', title: 'Código inválido', text: 'El código ingresado no es válido.', confirmButtonText: 'Aceptar' });
+        if (res.error === true) {
+          const mensaje = typeof res.contenido === 'string' && res.contenido.trim()
+            ? res.contenido
+            : 'Error al validar el código. Intente nuevamente.';
+          Swal.fire({ icon: 'error', title: 'Código inválido', text: mensaje, confirmButtonText: 'Aceptar' });
+          return;
         }
+
+        const token = (res.contenido as { token: string }).token;
+        this.mostrar2FA = false;
+        this.codigo2FA = '';
+        const creds: UsuarioCredencialesDTO = this.form.value;
+        this.completarLogin(token, creds);
       },
-      error: () => {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo validar el código. Intente nuevamente.', confirmButtonText: 'Aceptar' });
+      error: (err: any) => {
+        const mensaje = typeof err?.error?.contenido === 'string' && err.error.contenido.trim()
+          ? err.error.contenido
+          : 'Error al validar el código. Intente nuevamente.';
+        Swal.fire({ icon: 'error', title: 'Error', text: mensaje, confirmButtonText: 'Aceptar' });
       }
     });
   }

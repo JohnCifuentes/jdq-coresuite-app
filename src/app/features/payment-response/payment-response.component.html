@@ -1,0 +1,91 @@
+<div class="payment-response-page">
+  <div class="payment-response-wrapper">
+
+    <div class="brand-header mb-4">
+      <span class="material-symbols-outlined text-primary me-2">workspace_premium</span>
+      <span class="brand-name">JDQ CoreSuite</span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="response-card pending text-center py-5">
+      <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+      <p class="fw-semibold mb-1">Validando tu pago...</p>
+      <p class="text-muted small">{{ message }}</p>
+    </div>
+
+    <!-- Result -->
+    <div *ngIf="!loading" [class]="statusClass">
+      <div class="response-icon-wrapper">
+        <span class="material-symbols-outlined response-icon">{{ statusIcon }}</span>
+      </div>
+
+      <h4 class="fw-bold mt-3 mb-1">
+        <ng-container [ngSwitch]="status">
+          <span *ngSwitchCase="PaymentStatus.Approved">¡Pago aprobado!</span>
+          <span *ngSwitchCase="PaymentStatus.Declined">Pago rechazado</span>
+          <span *ngSwitchCase="PaymentStatus.Cancelled">Pago cancelado</span>
+          <span *ngSwitchCase="PaymentStatus.Error">Error en el pago</span>
+          <span *ngSwitchDefault>Pago en proceso</span>
+        </ng-container>
+      </h4>
+
+      <p class="text-muted small mb-3">{{ message }}</p>
+
+      <div *ngIf="reference" class="reference-chip mb-3">
+        Referencia: <strong>{{ reference }}</strong>
+      </div>
+
+      <div *ngIf="paymentData && status === PaymentStatus.Approved" class="payment-summary mb-3">
+        <div class="summary-row">
+          <span class="label">Monto pagado</span>
+          <span class="value">{{ formatCurrency(paymentData.amountInCents) }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Moneda</span>
+          <span class="value">{{ paymentData.currency }}</span>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 justify-content-center mt-4">
+        <button
+          *ngIf="status !== PaymentStatus.Approved"
+          type="button"
+          class="btn btn-outline-primary btn-sm"
+          (click)="retryValidation()">
+          <span class="material-symbols-outlined btn-icon">refresh</span>
+          Reintentar validación
+        </button>
+
+        <button
+          *ngIf="status !== PaymentStatus.Approved"
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          (click)="goProfile()">
+          <span class="material-symbols-outlined btn-icon">manage_accounts</span>
+          Volver al perfil
+        </button>
+
+        <button
+          *ngIf="status === PaymentStatus.Approved"
+          type="button"
+          class="btn btn-primary btn-sm"
+          (click)="goProfile()">
+          <span class="material-symbols-outlined btn-icon">manage_accounts</span>
+          Ir a mi perfil
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-link btn-sm text-muted"
+          (click)="goHome()">
+          Ir al inicio
+        </button>
+      </div>
+    </div>
+
+    <p class="text-center text-muted small mt-4">
+      <span class="material-symbols-outlined align-middle" style="font-size:14px">shield_lock</span>
+      Pago procesado de forma segura por Wompi
+    </p>
+  </div>
+</div>
